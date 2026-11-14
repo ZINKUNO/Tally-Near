@@ -1,7 +1,7 @@
 # Tally contract
 
 near-sdk 5. Deployed on testnet as `tallynear.testnet`. Build: `cargo near build non-reproducible-wasm`.
-Tests: `cargo test -p tally` (38 unit tests + 5 sandbox tests on a local NEAR node).
+Tests: `cargo test -p tally` (42 unit tests + 5 sandbox tests on a local NEAR node).
 
 ## Methods
 
@@ -19,6 +19,7 @@ Tests: `cargo test -p tally` (38 unit tests + 5 sandbox tests on a local NEAR no
 | owner | `report(account_id, evidence_hash, note)` | counterparty report; two make the Guard warn |
 | owner | `open_dispute(receipt_id, evidence_hash)` | within 7 days of a settled purchase |
 | arbiter | `resolve_dispute(receipt_id, upheld, slash, block)`, `block_account`, `unblock_account` | rulings and the shared blocklist |
+| anyone | `sign_receipt(receipt_id)` + 1 yoctoNEAR | NEAR Chain Signatures: the MPC network signs a settled receipt with Tally's derived secp256k1 key |
 | anyone | `prove_floor_fraud(merchant_id, header…, signature, cheap, claimed)` | slash half the bond for a self-contradicting signed menu |
 
 Views: `get_config`, `stats`, `get_merchant`, `list_merchants`, `get_capsule`, `get_receipt`,

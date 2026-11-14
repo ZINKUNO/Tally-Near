@@ -39,6 +39,14 @@ built wasm and the token on a local NEAR node.
 | 29 | One passkey derives the owner implicit account, agent and menu keys | `web/test/passkey.test.ts` | e2e "a new Face ID user…" |
 | 30 | The MCP server exposes status, menu, merchant check, buy and top-up quotes | `pnpm --filter @tally-near/agent mcp:smoke` (needs the merchant server) | — |
 | 31 | Family top-up shows a live NEAR Intents quote from other chains | `web/test/intents.test.ts` | `curl '<app>/api/quote?from=base&usd=20'` |
+| 32 | The agent pays gaslessly through a NEP-366 relayer; relayed pay is held to agent rules | `relayed_pay_is_held_to_agent_rules`, `relayed_pay_refused_after_the_agent_is_revoked`, `owner_actions_cannot_be_relayed`, `packages/sdk/test/relay.test.ts` | [proofs §1](docs/proofs.md#1-gasless-agent-payments-nep-366-meta-transactions) |
+| 33 | A Sputnik DAO is the arbiter and resolved a dispute by vote | — | [proofs §2](docs/proofs.md#2-sputnik-dao-is-the-arbiter) |
+| 34 | The agent verifies NEAR AI Cloud's TDX quote (Intel DCAP) and its key/nonce binding | `a verified quote must bind the signing address and our nonce` | [proofs §3](docs/proofs.md#3-near-ai-cloud-tee-verified-intel-tdx) |
+| 35 | Deployed code hash equals a reproducible build of a named commit (NEP-330) | — | [proofs §4](docs/proofs.md#4-verifiable-contract-reproducible-build--nep-330-source-metadata) |
+| 36 | Tally Guard is live on the NEAR AI Agent Market | `packages/agent/test/market.test.ts` | [proofs §5](docs/proofs.md#5-near-ai-agent-market-tally-guard-a-hireable-agent) |
+| 37 | NEAR's MPC network signs receipts; ecrecover matches Tally's derived key | `packages/sdk/test/portable.test.ts`, `receipt_digest_binds_every_field_and_the_mpc_answer_is_stored` | [proofs §6](docs/proofs.md#6-near-chain-signatures-portable-receipts) |
+| 38 | NEAR Intents deposit addresses for real cross-chain top-ups | `packages/sdk/test/intents.test.ts` | [proofs §7](docs/proofs.md#7-near-intents-real-cross-chain-top-ups) |
+| 39 | NEAR wallet sign-in; the wallet signs owner actions | `web/test/wallet.test.ts` | [proofs §8](docs/proofs.md#8-near-wallet-sign-in-hot-near-connect) |
 
 ## Live, read-only (no keys)
 

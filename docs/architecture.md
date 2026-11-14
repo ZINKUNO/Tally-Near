@@ -151,6 +151,22 @@ every Face ID unlock. The app derives three ed25519 keys from it (`sha256(prf â€
 
 Approving a Second Look asks for a fresh Face ID and signs `approve` with the owner key.
 
+## Gasless agent (NEP-366)
+
+The agent can sign `pay` as a delegate action instead of a transaction; the app's relayer (`/api/relay`, the
+sponsor account) wraps it and pays the gas, so the agent key needs no allowance. Inside a relayed receipt
+`signer_account_id` is the relayer, so the contract can't see which of the owner's keys signed: every relayed
+`pay` is therefore held to the agent's rules (never co-signed, rejections are strikes, refused once the agent is
+revoked), and owner methods refuse relayed calls (`owner must sign directly`). The relayer only sponsors a single
+`pay` to Tally with no deposit.
+
+## Portable receipts (Chain Signatures)
+
+`sign_receipt` sends the EIP-191 hash of a canonical receipt digest to NEAR's MPC signer under the path
+`tally-receipts`. The signature is stored under its own storage prefix (no state migration) and returned by
+`get_receipt_signature`. Anyone verifies it with the MPC root key, NEAR's key derivation and `ecrecover`
+(`packages/sdk/src/portable.ts`); on an EVM chain it is a one-line `ecrecover` against Tally's derived address.
+
 ## Events
 
 NEP-297 JSON logs, standard `tally`, version `1.0.0`: `merchant_registered`, `capsule_created`,

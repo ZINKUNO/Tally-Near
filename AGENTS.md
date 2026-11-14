@@ -20,12 +20,12 @@ every README claim maps to a test or live evidence in `VERIFY.md`.
 | Goal | Command | Expected |
 | --- | --- | --- |
 | Everything offline | `./scripts/verify.sh` | ends with `all checks passed` |
-| Contract + format tests | `cargo test --workspace --lib` | 38 + 11 passed |
+| Contract + format tests | `cargo test --workspace --lib` | 42 + 11 passed |
 | Sandbox tests | `cargo test -p tally --test sandbox` (or `SANDBOX=1 ./scripts/verify.sh`) | 5 passed; downloads a local NEAR node on first run |
 | Contract wasm | `cd contracts/tally && cargo near build non-reproducible-wasm` | `target/near/tally/tally.wasm` |
-| SDK tests | `pnpm --filter @tally-near/sdk test` | 10 pass |
-| Agent tests | `pnpm --filter @tally-near/agent test` | 5 pass |
-| App tests | `pnpm --filter @tally-near/web test` | 63 pass, 6 live tests skipped |
+| SDK tests | `pnpm --filter @tally-near/sdk test` | 17 pass |
+| Agent tests | `pnpm --filter @tally-near/agent test` | 7 pass |
+| App tests | `pnpm --filter @tally-near/web test` | 66 pass, 8 live tests skipped |
 | App build | `pnpm --filter @tally-near/web build` | Next.js route table |
 | Live read-only | `near contract call-function as-read-only tallynear.testnet stats json-args '{}' network-config testnet now` | merchants, capsules, receipts counts |
 

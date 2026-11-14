@@ -9,7 +9,7 @@ An AI agent may pay only for an item a merchant signed, at the signed price, to 
 merchant, inside your rules. A NEAR contract checks every payment; the agent's key can't do anything else.
 
 **[Live app](https://tally-near.adoranto737.workers.dev)** · [Demo café QR](https://tally-near.adoranto737.workers.dev/counter) · [Contract `tallynear.testnet`](https://testnet.nearblocks.io/address/tallynear.testnet) ·
-[Attack log](docs/attack-log.md) · [Happy-path log](docs/demo-log.md) · [Architecture](docs/architecture.md) · [Threat model](docs/threat-model.md) · [Verify every claim](VERIFY.md)
+[Proofs](docs/proofs.md) · [Attack log](docs/attack-log.md) · [Happy-path log](docs/demo-log.md) · [Architecture](docs/architecture.md) · [Threat model](docs/threat-model.md) · [Verify every claim](VERIFY.md)
 
 Built at **NEAR HACKATHON** (Nov 2026) · Tracks: `security`, `agents`, `realworld` · MIT
 
@@ -68,7 +68,7 @@ near contract call-function as-read-only tallynear.testnet get_receipts \
 ```bash
 ./scripts/verify.sh
 ```
-→ 38 contract + 11 format tests, wasm build, 10 SDK + 5 agent + 63 app tests, `next build`, then `all checks passed`. `SANDBOX=1 ./scripts/verify.sh` adds 5 tests on a local NEAR node.
+→ 42 contract + 11 format tests, wasm build, 17 SDK + 7 agent + 66 app tests, `next build`, then `all checks passed`. `SANDBOX=1 ./scripts/verify.sh` adds 5 tests on a local NEAR node.
 
 **3. Run the app locally.**
 
@@ -128,10 +128,18 @@ Balance before and after: 89.6 → 89.6 tUSDC.
 | **NEP-141** `ft_transfer_call` / `ft_on_transfer` | funding and family top-ups | anyone can top up anyone's allowance with a note; wrong tokens are returned |
 | Promises + callbacks | `on_payout`, `on_withdraw` | a bounced payout refunds the capsule, restores the cap, frees the nullifier |
 | **Implicit accounts** | the app (`web/lib/passkey.ts`) | Face ID passkey → owner account with no wallet or seed phrase; a sponsor creates it with one transfer |
-| **NEAR AI Cloud** | planner + attestation (`packages/agent`) | private inference in a TEE; each receipt pins a gateway TDX quote digest bound to a fresh nonce |
-| **NEAR Intents** (1Click, dry quotes) | family top-up page, MCP `tally_quote_topup` | family abroad see the live price to fund the allowance from Base, Arbitrum, Ethereum or Polygon USDC; quote only, since Intents is mainnet-only |
+| **NEAR AI Cloud (TEE)** | planner + attestation (`packages/agent`) | private inference; the agent verifies the gateway's Intel TDX quote with DCAP and checks it binds the gateway key and a fresh nonce, then pins `nearai-tdx:…` in the receipt |
+| **NEAR Intents** (1Click) | family top-up page, MCP `tally_quote_topup` | live quotes, and a real deposit address: USDC sent on Base, Arbitrum, Ethereum or Polygon lands as NEAR USDC at the owner's account on mainnet |
+| **Meta transactions (NEP-366)** | `/api/relay`, `AgentWallet.payGasless` | the agent pays gaslessly: it signs a delegate action, a relayer pays the gas; relayed `pay` is always held to agent rules |
+| **Chain Signatures** | `sign_receipt`, `packages/sdk/src/portable.ts` | NEAR's MPC network signs settled receipts with Tally's derived secp256k1 key; any EVM chain can `ecrecover` them |
+| **Sputnik DAO** | arbiter `tally-arbiter.sputnikv2.testnet` | disputes and blocklisting are decided by a council vote, not one key |
+| **NEAR AI Agent Market** | Tally Guard (`packages/agent/src/market.ts`) | a live, hireable agent that runs Tally's Guard on any NEAR accounts and delivers a report |
+| **Wallet connector** (HOT near-connect) | landing page, `web/lib/wallet.ts` | existing NEAR users sign in with Meteor, Intear, Ledger, Nightly or EVM wallets; the wallet signs owner actions |
+| **Reproducible build + NEP-330** | `cargo near build reproducible-wasm` | the deployed code hash equals a rebuild of a named commit; `contract_source_metadata` points at it |
 | **NEP-297 events** | every state change | indexers and the app read `paid`, `second_look`, `tripwire`, `blocked`… |
-| Named accounts | merchants, payouts, arbiter | the arbiter can be a Sputnik DAO; the Guard reads account-level facts |
+| Named accounts | merchants, payouts, arbiter | the Guard reads account-level facts (age, payout changes, contract code) |
+
+Every integration has live testnet evidence in **[docs/proofs.md](docs/proofs.md)**.
 
 ## The agent's key, and its limits
 

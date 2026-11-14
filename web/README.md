@@ -8,7 +8,7 @@ Live: https://tally-near.adoranto737.workers.dev (Cloudflare Workers via OpenNex
 ```bash
 cp .env.example .env.local   # fill in the sponsor and demo-counter secrets
 pnpm dev                     # http://localhost:3000
-pnpm test                    # 63 unit tests
+pnpm test                    # 66 unit tests
 LIVE=1 pnpm test             # + live testnet end to end (needs .env.local)
 ```
 

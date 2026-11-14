@@ -26,4 +26,7 @@ pnpm mcp:smoke      # lists tools and calls the read-only ones
 MCP tools: `tally_status`, `tally_menu`, `tally_check_merchant`, `tally_buy`, `tally_quote_topup` (live NEAR Intents price, dry). None of them can approve
 a Second Look, change rules or unfreeze: the key they hold can't.
 
-Tests: `pnpm test` (5).
+Also: `pnpm verify-tee` (Intel DCAP check of NEAR AI Cloud), `pnpm market …` (Tally Guard on the Agent Market),
+`TALLY_RELAY_URL=…/api/relay` for gasless payments.
+
+Tests: `pnpm test` (7).

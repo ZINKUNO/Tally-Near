@@ -21,4 +21,7 @@ const { outcome } = await new AgentWallet(client, 'alice.testnet', agentKey).pay
 `checkCounterparty` adds agent-side signals (payout account exists, age, contract code-hash pins,
 history) to the contract's verdict and returns `sign`, `ask_human` or `refuse`.
 
-Tests: `pnpm test` (10).
+Also: `signPayDelegate` / `checkPayDelegate` (NEP-366 gasless pay), `verifyPortable` (Chain Signatures
+receipts), `depositRequest` (NEAR Intents deposits).
+
+Tests: `pnpm test` (17).
