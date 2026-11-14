@@ -6,6 +6,8 @@ import { Button, Card, Header, Spinner, usd } from "@/components/ui";
 import { getSales, type Receipt } from "@/lib/activity";
 import { rowsToItems, signMenu, type MenuRow } from "@/lib/counter";
 import { encodeQr } from "@/lib/menu";
+import type { Verdict } from "@tally-near/sdk";
+import { client } from "@/lib/chain";
 import { useSession } from "@/lib/session";
 import { CATEGORY_LABEL, chainNow, nearAmount, nearBalance, readMerchant, registerMerchant, type Merchant } from "@/lib/tally";
 
@@ -25,6 +27,7 @@ export default function MerchantPage() {
   const [shop, setShop] = useState("My Café");
   const [qr, setQr] = useState<string>();
   const [sales, setSales] = useState<Receipt[]>([]);
+  const [guard, setGuard] = useState<Verdict>();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string>();
 
@@ -34,6 +37,7 @@ export default function MerchantPage() {
     if (!owner) return;
     setM(await readMerchant(owner.address));
     setSales(await getSales(owner.address));
+    setGuard(await client.assess(owner.address).catch(() => undefined));
   }, [owner]);
 
   useEffect(() => {
@@ -164,7 +168,7 @@ export default function MerchantPage() {
             </div>
             <ul className="mt-2 divide-y divide-white/5">
               {sales.slice(0, 8).map((r) => (
-                <li key={r.txHash} className="flex justify-between py-2 text-sm">
+                <li key={r.receipt} className="flex justify-between py-2 text-sm">
                   <span>{CATEGORY_LABEL[r.category]}</span>
                   <span className="tabular">{usd(r.price)}</span>
                 </li>
@@ -172,6 +176,15 @@ export default function MerchantPage() {
               {sales.length === 0 && <li className="py-2 text-sm text-faint">No sales yet</li>}
             </ul>
             <p className="mt-3 text-xs text-faint">Bond {nearAmount(m.bond)} · slashed {nearAmount(m.slashedTotal)}</p>
+            {guard && (
+              <p className="mt-2 text-xs text-muted">
+                Customers&apos; agents see:{" "}
+                <span className={guard.level === "allow" ? "text-paid" : guard.level === "warn" ? "text-needs" : "text-blocked"}>
+                  {guard.level === "allow" ? "no red flags" : guard.level === "warn" ? "ask the customer first" : "blocked"}
+                </span>
+                {guard.reasons.length > 0 && ` (${guard.reasons.join("; ")})`}
+              </p>
+            )}
           </Card>
         </>
       )}
