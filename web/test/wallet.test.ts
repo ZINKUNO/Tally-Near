@@ -11,7 +11,7 @@ function stubWallet(value: unknown = null) {
       return { status: { SuccessValue: value === null ? "" : btoa(JSON.stringify(value)) }, transaction: { hash: "H" } };
     },
   };
-  return { wallet, sent };
+  return { wallet: wallet as unknown as import("../lib/wallet").WalletLike, sent };
 }
 
 it("owner calls go to the connected wallet, not a local key", async () => {
