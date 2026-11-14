@@ -129,8 +129,8 @@ verification; the full quote can be verified with NEAR AI's verifier.
 
 ## After the sale
 
-* **Disputes.** An owner disputes a settled receipt within 7 days with an evidence hash. The arbiter
-  (an account; can be a Sputnik DAO) upholds or rejects. Upheld disputes slash the merchant's NEAR bond
+* **Disputes.** An owner disputes a settled receipt within 7 days with an evidence hash. The arbiter,
+  a Sputnik DAO (`tally-arbiter.sputnikv2.testnet`) whose council votes on a `resolve_dispute` proposal, upholds or rejects. Upheld disputes slash the merchant's NEAR bond
   to the owner and can blocklist the merchant. A merchant can't withdraw its bond while a dispute is
   open, or before the unlock delay.
 * **Floor fraud.** Each leaf carries the merchant-certified cheapest price in its category. If a

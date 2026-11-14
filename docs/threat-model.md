@@ -23,8 +23,8 @@ the code and the test that prove it.
 
 * A stolen **owner** key (or unlocked phone): it can change rules and approve. The passkey requires
   user verification on every unlock; revoking the agent and freezing are one tap each.
-* A malicious **arbiter**: it can rule disputes and edit the blocklist. Point `arbiter` at a Sputnik DAO
-  to spread that trust.
+* A captured **arbiter council**: the arbiter is a Sputnik DAO, so ruling a dispute or blocklisting takes
+  a proposal and a council majority rather than one key.
 * The model's choice among *valid* options: the owner's rules decide what is allowed; Second Look
   catches anything above the cheapest match.
 * Attestation: receipts pin a NEAR AI Cloud gateway quote digest bound to a nonce; full DCAP
