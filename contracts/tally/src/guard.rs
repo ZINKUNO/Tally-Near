@@ -26,14 +26,14 @@ impl Tally {
         if m.bond.0 < self.config.min_bond.0 {
             block.push("merchant bond was slashed below the protocol minimum".into());
         }
-        if now.saturating_sub(m.registered_at_ms) < NEW_MERCHANT_MS {
-            warn.push("merchant registered less than 24 h ago".into());
+        if now.saturating_sub(m.registered_at_ms) < self.config.new_merchant_ms {
+            warn.push(format!("merchant registered less than {} ago", human(self.config.new_merchant_ms)));
         }
-        if m.payout_changed_at_ms != m.registered_at_ms && now.saturating_sub(m.payout_changed_at_ms) < NEW_MERCHANT_MS {
-            warn.push("payout account changed less than 24 h ago".into());
+        if m.payout_changed_at_ms != m.registered_at_ms && now.saturating_sub(m.payout_changed_at_ms) < self.config.new_merchant_ms {
+            warn.push(format!("payout account changed less than {} ago", human(self.config.new_merchant_ms)));
         }
-        if m.key_rotated_at_ms != m.registered_at_ms && now.saturating_sub(m.key_rotated_at_ms) < NEW_KEY_MS {
-            warn.push("menu signing key rotated less than 1 h ago".into());
+        if m.key_rotated_at_ms != m.registered_at_ms && now.saturating_sub(m.key_rotated_at_ms) < self.config.new_key_ms {
+            warn.push(format!("menu signing key rotated less than {} ago", human(self.config.new_key_ms)));
         }
         if m.open_disputes > 0 {
             warn.push(format!("{} open dispute(s) against this merchant", m.open_disputes));
@@ -92,5 +92,13 @@ impl Tally {
         let reason: String = reason.chars().take(MAX_TEXT).collect();
         self.blocklist.insert(account_id.clone(), BlockEntry { reason: reason.clone(), evidence_hash: evidence_hash.clone(), at_ms: now_ms() });
         emit("blocked", json!({ "account_id": account_id, "reason": reason, "evidence_hash": evidence_hash }));
+    }
+}
+
+fn human(ms: u64) -> String {
+    if ms >= 3_600_000 && ms % 3_600_000 == 0 {
+        format!("{} h", ms / 3_600_000)
+    } else {
+        format!("{} min", ms / 60_000)
     }
 }

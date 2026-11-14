@@ -264,4 +264,8 @@ pub struct Config {
     pub bond_unlock_delay_ms: u64,
     /// NEAR a new capsule locks for storage, refunded on close.
     pub capsule_storage: U128,
+    /// The Guard warns about merchants younger than this, or whose payout changed this recently.
+    pub new_merchant_ms: u64,
+    /// The Guard warns about a menu key rotated this recently.
+    pub new_key_ms: u64,
 }

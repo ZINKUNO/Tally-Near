@@ -35,9 +35,9 @@ pub const CYCLE_MS: u64 = 24 * 60 * 60 * 1000;
 pub const STRIKE_WINDOW_MS: u64 = 60 * 60 * 1000;
 /// A Second Look request expires after this long.
 pub const PENDING_TTL_MS: u64 = 30 * 60 * 1000;
-/// A merchant younger than this, or with a payout changed this recently, draws a Guard warning.
+/// Default Guard window for new merchants and changed payouts (admin can change it).
 pub const NEW_MERCHANT_MS: u64 = 24 * 60 * 60 * 1000;
-/// A signing key rotated this recently draws a Guard warning.
+/// Default Guard window for a rotated menu key.
 pub const NEW_KEY_MS: u64 = 60 * 60 * 1000;
 /// Distinct owner reports on an account that draw a Guard warning.
 pub const REPORTS_TO_WARN: usize = 2;
@@ -91,6 +91,8 @@ impl Tally {
                 slash_bps: 5_000,
                 bond_unlock_delay_ms: 60 * 60 * 1000,
                 capsule_storage: NearToken::from_millinear(100).as_yoctonear().into(),
+                new_merchant_ms: NEW_MERCHANT_MS,
+                new_key_ms: NEW_KEY_MS,
             },
             merchants: IterableMap::new(Key::Merchants),
             capsules: IterableMap::new(Key::Capsules),
@@ -113,6 +115,8 @@ impl Tally {
         min_bond: Option<near_sdk::json_types::U128>,
         slash_bps: Option<u16>,
         bond_unlock_delay_ms: Option<u64>,
+        new_merchant_ms: Option<u64>,
+        new_key_ms: Option<u64>,
     ) {
         require!(env::predecessor_account_id() == self.config.admin, "admin only");
         if let Some(a) = arbiter {
@@ -127,6 +131,12 @@ impl Tally {
         }
         if let Some(d) = bond_unlock_delay_ms {
             self.config.bond_unlock_delay_ms = d;
+        }
+        if let Some(d) = new_merchant_ms {
+            self.config.new_merchant_ms = d;
+        }
+        if let Some(d) = new_key_ms {
+            self.config.new_key_ms = d;
         }
     }
 }
