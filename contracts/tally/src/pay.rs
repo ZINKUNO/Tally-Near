@@ -196,15 +196,21 @@ impl Tally {
 impl Tally {
     /// Pay for one item on a merchant-signed menu from the caller's capsule.
     ///
-    /// Signed by the capsule's agent key: a rule violation returns `rejected` (and counts toward
-    /// the tripwire) instead of panicking; anything that needs the owner returns `second_look`.
-    /// Signed by any other key of the owner's account: the owner is paying, so it is co-signed,
-    /// and a rule violation panics.
+    /// Signed by the capsule's agent key, or relayed as a meta transaction: a rule violation returns
+    /// `rejected` (and counts toward the tripwire) instead of panicking; anything that needs the owner
+    /// returns `second_look`. Signed directly by any other key of the owner's account: the owner is
+    /// paying, so it is co-signed, and a rule violation panics.
     pub fn pay(&mut self, args: PayArgs) -> PayOutcome {
         let owner = env::predecessor_account_id();
-        require!(env::signer_account_id() == owner, "pay must be signed by the capsule owner's account");
         let c = self.capsules.get(&owner).unwrap_or_else(|| env::panic_str("no capsule")).clone();
-        let by_agent = c.agent_key.as_ref() == Some(&env::signer_account_pk());
+        // Relayed (NEP-366 meta transaction) or otherwise forwarded: the protocol already checked the
+        // delegate signature against a key on the owner's account allowed to call `pay`, but the
+        // contract can't see which key. Such calls are always held to the agent's rules.
+        let delegated = env::signer_account_id() != owner;
+        if delegated {
+            require!(c.agent_key.is_some(), "the agent key was revoked");
+        }
+        let by_agent = delegated || c.agent_key.as_ref() == Some(&env::signer_account_pk());
         let now = now_ms();
         match self.check(&owner, &c, &args, now, now) {
             Err((code, reason)) if by_agent => {

@@ -500,19 +500,51 @@ fn owner_can_pay_pricier_item_directly() {
     assert!(w.c.get_receipt(0).unwrap().cosigned);
 }
 
-#[test]
-#[should_panic(expected = "pay must be signed by the capsule owner's account")]
-fn another_contract_cannot_pay_from_a_capsule() {
-    let mut w = world();
-    let a = cafe_menu(T0).args(&w.menu_sk, 0);
+fn relayed(w: &World, ms: u64) {
+    // NEP-366: the relayer signs the outer transaction; the owner is the predecessor
     let mut b = VMContextBuilder::new();
     b.current_account_id(acc("tally.testnet"))
         .predecessor_account_id(acc("alice.testnet"))
-        .signer_account_id(acc("mallory.testnet"))
-        .signer_account_pk(w.agent_pk.clone())
-        .block_timestamp((T0 + 1000) * 1_000_000);
+        .signer_account_id(acc("relayer.testnet"))
+        .signer_account_pk(w.owner_pk.clone())
+        .block_timestamp(ms * 1_000_000);
     testing_env!(b.build());
-    w.c.pay(a);
+}
+
+#[test]
+fn relayed_pay_is_held_to_agent_rules() {
+    let mut w = world();
+    let m = cafe_menu(T0);
+    relayed(&w, T0 + 1000);
+    assert!(matches!(w.c.pay(m.args(&w.menu_sk, 0)), PayOutcome::Paid { .. }));
+    assert!(!w.c.get_receipt(0).unwrap().cosigned);
+    relayed(&w, T0 + 2000);
+    assert!(matches!(w.c.pay(m.args(&w.menu_sk, 1)), PayOutcome::SecondLook { .. }), "a relayed pricier pick never counts as the owner");
+    let mut bad = m.args(&w.menu_sk, 2);
+    bad.price = U128(1);
+    relayed(&w, T0 + 3000);
+    assert_eq!(rejected(w.c.pay(bad)).0, Reject::NotOnMenu);
+}
+
+#[test]
+#[should_panic(expected = "the agent key was revoked")]
+fn relayed_pay_refused_after_the_agent_is_revoked() {
+    let mut w = world();
+    owner(&w, T0);
+    w.c.set_agent_key(None);
+    relayed(&w, T0 + 1000);
+    w.c.pay(cafe_menu(T0).args(&w.menu_sk, 0));
+}
+
+#[test]
+#[should_panic(expected = "owner must sign directly")]
+fn owner_actions_cannot_be_relayed() {
+    let mut w = world();
+    let m = cafe_menu(T0);
+    agent(&w, T0 + 1000);
+    let PayOutcome::SecondLook { pending_id, .. } = w.c.pay(m.args(&w.menu_sk, 1)) else { panic!() };
+    relayed(&w, T0 + 2000);
+    w.c.approve(pending_id);
 }
 
 #[test]
