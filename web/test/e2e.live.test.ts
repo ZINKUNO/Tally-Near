@@ -10,7 +10,7 @@ import { DEMO_ITEMS, signMenu } from "../lib/counter";
 import { decodeQr, payArgs } from "../lib/menu";
 import { deriveKeys } from "../lib/passkey";
 import { pay } from "../lib/pay";
-import { chainNow, createAllowance, fundAllowance, readCapsule, rulesFromForm, usdBalance } from "../lib/tally";
+import { chainNow, createAllowance, fundAllowance, readCapsule, restoreAgent, revokeAgent, rulesFromForm, usdBalance } from "../lib/tally";
 
 const live = process.env.LIVE === "1" && !!process.env.SPONSOR_KEY && !!process.env.DEMO_MERCHANT_SIGNER_KEY;
 const fresh = () => deriveKeys(crypto.getRandomValues(new Uint8Array(32)));
@@ -61,6 +61,16 @@ describe.skipIf(!live)("live on testnet", () => {
     expect(c.balance).toBe(before + 5_000_000n);
     expect(c.topups.at(-1)?.note).toBe("For lunches");
   }, 120_000);
+
+  it("a revoked agent key can't reach Tally at all; restored, it pays again", async () => {
+    await revokeAgent(me.owner, me.agent.publicKey);
+    expect((await readCapsule(id))!.agent).toBe("");
+    const m = await demoMenu();
+    await expect(pay(me.agent, null, id, m, m.items[4])).rejects.toThrow();
+    await restoreAgent(me.owner, me.agent.publicKey);
+    const r = await pay(me.agent, null, id, await demoMenu(), m.items[4]);
+    expect(r.cosigned).toBe(false);
+  }, 180_000);
 
   it("the contract refuses all four red-team attacks", async () => {
     const m = await demoMenu();
