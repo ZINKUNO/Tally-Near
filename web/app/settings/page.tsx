@@ -1,16 +1,17 @@
 "use client";
 
-import { Bot, Check, Copy, Cpu, Fuel, KeyRound, LogOut, ScrollText, Store, Swords, Wallet } from "lucide-react";
+import { Ban, Bot, Check, Copy, Cpu, Fuel, KeyRound, LogOut, RotateCcw, ScrollText, Store, Swords, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { Mascot } from "@/components/Mascot";
 import { RequireSession } from "@/components/RequireSession";
-import { Button, Card, Chip, Label, Tile, usd } from "@/components/ui";
+import { Button, Card, Chip, Label, Spinner, Tile } from "@/components/ui";
 import { provider } from "@/lib/chain";
 import { useSession } from "@/lib/session";
-import { describeRules } from "@/lib/tally";
+import { humanError } from "@/lib/errors";
+import { describeRules, nearAmount, restoreAgent, revokeAgent } from "@/lib/tally";
 import { useAllowance } from "@/lib/useAllowance";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -43,6 +44,8 @@ function SettingsInner() {
   const router = useRouter();
   const [fee, setFee] = useState<bigint>();
   const [name, setName] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [agentErr, setAgentErr] = useState<string>();
 
   useEffect(() => setName(localStorage.getItem("tally.name")), []);
   useEffect(() => {
@@ -106,6 +109,35 @@ function SettingsInner() {
           {a.id !== undefined && <Row icon={<KeyRound size={17} />} title="Allowance" value={short(a.id)} />}
         </ul>
       </Card>
+      {a.capsule && (
+        <>
+          <Button
+            variant="ghost"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setAgentErr(undefined);
+              try {
+                if (a.capsule!.agent) await revokeAgent(keys.owner, keys.agent.publicKey);
+                else await restoreAgent(keys.owner, keys.agent.publicKey);
+                await a.refresh();
+              } catch (e) {
+                setAgentErr(humanError(e));
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {busy ? <Spinner /> : a.capsule.agent ? <><Ban size={17} /> Revoke the agent&apos;s key</> : <><RotateCcw size={17} /> Give the agent its key back</>}
+          </Button>
+          <p className="-mt-2 text-center text-[12px] text-faint">
+            {a.capsule.agent
+              ? "Deletes the key from your NEAR account. Stronger than pause: nothing it signs can reach Tally."
+              : "Your agent has no key right now. It can't pay anything."}
+          </p>
+          {agentErr && <p className="rounded-2xl bg-blocked/10 p-3 text-sm text-blocked">{agentErr}</p>}
+        </>
+      )}
 
       {a.capsule && (
         <>
@@ -118,7 +150,7 @@ function SettingsInner() {
               <div>
                 <p className="text-[14px]">{describeRules(a.capsule.rules)}.</p>
                 <p className="mt-1 text-[13px] text-faint">
-                  Pricier than the cheapest match, a counter bonded under {usd(a.capsule.rules.minMerchantBond)}, or a printed menu: always asks you
+                  Pricier than the cheapest match, a counter bonded under {nearAmount(a.capsule.rules.minMerchantBond)}, or a printed menu: always asks you
                   first. Ends {new Date(Number(a.capsule.rules.expiry) * 1000).toLocaleDateString()}.
                 </p>
               </div>
