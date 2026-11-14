@@ -3836,7 +3836,7 @@ dependencies = [
  "hex",
  "near-sdk",
  "near-workspaces",
- "rand 0.8.8",
+ "rand 0.10.3",
  "serde_json",
  "tally-menu",
  "tokio",
