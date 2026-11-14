@@ -5,7 +5,7 @@ members = ["crates/tally-menu", "contracts/tally", "contracts/tusdc"]
 [workspace.package]
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/LSUDOKO/Tally-Near"
+repository = "https://github.com/ZINKUNO/Tally-Near"
 
 [profile.release]
 codegen-units = 1
