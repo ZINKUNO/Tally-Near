@@ -98,7 +98,9 @@ export type Preview = { outcome: 'paid' | 'second_look' | 'rejected'; code: Reje
 
 export class TallyClient {
   readonly provider: JsonRpcProvider;
-  constructor(readonly contractId: string, rpcUrl: string = RPC.testnet) {
+  readonly contractId: string;
+  constructor(contractId: string, rpcUrl: string = RPC.testnet) {
+    this.contractId = contractId;
     this.provider = new JsonRpcProvider({ url: rpcUrl });
   }
 
@@ -126,7 +128,11 @@ export class TallyClient {
  */
 export class AgentWallet {
   readonly account: Account;
-  constructor(readonly client: TallyClient, readonly ownerId: string, agentKey: KeyPairString) {
+  readonly client: TallyClient;
+  readonly ownerId: string;
+  constructor(client: TallyClient, ownerId: string, agentKey: KeyPairString) {
+    this.client = client;
+    this.ownerId = ownerId;
     this.account = new Account(ownerId, client.provider, KeyPairSigner.fromSecretKey(agentKey));
   }
 
