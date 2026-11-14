@@ -1,0 +1,24 @@
+{
+  "name": "@tally-near/demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Testnet seeding, merchant menu server, happy-path payment and the prompt-injection attack demo",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "seed": "node --experimental-strip-types src/seed.ts",
+    "merchant": "node --experimental-strip-types src/merchant-server.ts",
+    "pay": "node --experimental-strip-types src/pay.ts",
+    "attack": "node --experimental-strip-types src/attack.ts",
+    "status": "node --experimental-strip-types src/status.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tally-near/sdk": "workspace:*",
+    "near-api-js": "7.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3"
+  }
+}
