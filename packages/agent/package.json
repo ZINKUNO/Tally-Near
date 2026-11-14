@@ -1,0 +1,26 @@
+{
+  "name": "@tally-near/agent",
+  "version": "1.0.0",
+  "description": "Tally shopping agent: context firewall, NEAR AI Cloud planner, counterparty check, function-call-key payments, MCP server",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "tally-mcp": "src/mcp.ts"
+  },
+  "scripts": {
+    "buy": "node --experimental-strip-types src/cli.ts",
+    "mcp": "node --experimental-strip-types src/mcp.ts",
+    "test": "node --test --experimental-strip-types test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "@tally-near/sdk": "workspace:*",
+    "near-api-js": "7.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3"
+  }
+}
