@@ -688,3 +688,90 @@ fn unsettled_receipts_are_not_signed() {
     ctx("bob.testnet", &w.owner_pk, T0 + 2000, NearToken::from_yoctonear(1));
     let _ = w.c.sign_receipt(0);
 }
+
+// ---- audit fixes (see SECURITY.md findings TAL-01..03) ----
+
+#[test]
+fn close_capsule_waits_for_payouts_in_flight() {
+    let mut w = world();
+    let m = cafe_menu(T0);
+    agent(&w, T0 + 1000);
+    w.c.pay(m.args(&w.menu_sk, 0)); // 4.5 tUSDC payout in flight
+    owner(&w, T0 + 2000);
+    let rest = w.c.get_capsule(acc("alice.testnet")).unwrap().balance;
+    let _ = w.c.withdraw(rest);
+    w.c.on_withdraw(acc("alice.testnet"), rest, Ok(()));
+    owner(&w, T0 + 3000);
+    let closed = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let _ = w.c.close_capsule();
+    }));
+    assert!(closed.is_err(), "must not close while the payout can still bounce back");
+    w.c.on_payout(0, Ok(()));
+    owner(&w, T0 + 4000);
+    let _ = w.c.close_capsule();
+    assert!(w.c.get_capsule(acc("alice.testnet")).is_none());
+}
+
+#[test]
+fn a_bounced_payout_after_close_attempt_still_has_a_capsule_to_refund() {
+    let mut w = world();
+    let m = cafe_menu(T0);
+    agent(&w, T0 + 1000);
+    w.c.pay(m.args(&w.menu_sk, 0));
+    w.c.on_payout(0, Err(PromiseError::Failed));
+    assert_eq!(w.c.get_capsule(acc("alice.testnet")).unwrap().balance.0, 100 * USDC);
+}
+
+#[test]
+fn open_second_looks_are_capped_but_autonomous_pay_is_not() {
+    let mut w = world();
+    for n in 0..MAX_OPEN_PENDING as u64 {
+        let m = Menu::new("cafe.testnet", &[(1, 4_500_000), (1, 5_900_000)], T0, 300_000, 100 + n);
+        agent(&w, T0 + 1000 + n);
+        assert!(matches!(w.c.pay(m.args(&w.menu_sk, 1)), PayOutcome::SecondLook { .. }));
+    }
+    let m = Menu::new("cafe.testnet", &[(1, 4_500_000), (1, 5_900_000)], T0, 300_000, 200);
+    agent(&w, T0 + 2000);
+    assert_eq!(rejected(w.c.pay(m.args(&w.menu_sk, 1))).0, Reject::TooManyPending);
+    agent(&w, T0 + 2001);
+    assert!(matches!(w.c.pay(m.args(&w.menu_sk, 0)), PayOutcome::Paid { .. }), "the cheapest match still pays on its own");
+    // declining frees a slot
+    owner(&w, T0 + 3000);
+    w.c.decline(0);
+    let m2 = Menu::new("cafe.testnet", &[(1, 4_500_000), (1, 5_900_000)], T0, 300_000, 201);
+    agent(&w, T0 + 3001);
+    assert!(matches!(w.c.pay(m2.args(&w.menu_sk, 1)), PayOutcome::SecondLook { .. }));
+}
+
+#[test]
+fn expired_second_looks_stop_counting_toward_the_cap() {
+    let mut w = world();
+    for n in 0..MAX_OPEN_PENDING as u64 {
+        let m = Menu::new("cafe.testnet", &[(1, 4_500_000), (1, 5_900_000)], T0, 300_000, 300 + n);
+        agent(&w, T0 + 1000 + n);
+        w.c.pay(m.args(&w.menu_sk, 1));
+    }
+    let later = T0 + 1000 + PENDING_TTL_MS + 10;
+    let m = Menu::new("cafe.testnet", &[(1, 4_500_000), (1, 5_900_000)], later, 300_000, 400);
+    agent(&w, later + 1);
+    assert!(matches!(w.c.pay(m.args(&w.menu_sk, 1)), PayOutcome::SecondLook { .. }));
+    assert_eq!(w.c.get_pending(acc("alice.testnet")).len(), 1);
+}
+
+#[test]
+fn strikes_stay_bounded_with_the_tripwire_off() {
+    let mut w = world();
+    owner(&w, T0);
+    let mut r = rules();
+    r.tripwire = 0;
+    w.c.update_rules(r);
+    let mut bad = cafe_menu(T0).args(&w.menu_sk, 0);
+    bad.price = U128(1);
+    for i in 0..(MAX_STRIKES as u64 + 30) {
+        agent(&w, T0 + 1000 + i);
+        w.c.pay(bad.clone());
+    }
+    let c = w.c.get_capsule(acc("alice.testnet")).unwrap();
+    assert_eq!(c.strikes.len(), MAX_STRIKES);
+    assert!(!c.frozen);
+}
