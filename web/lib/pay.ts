@@ -1,4 +1,6 @@
-import { client, TALLY } from "./chain";
+import { signPayDelegate } from "@tally-near/sdk";
+import type { KeyPairString } from "near-api-js";
+import { client, provider, TALLY } from "./chain";
 import { buildTree, payArgs, type Item, type SignedMenu } from "./menu";
 import { CATEGORY_LABEL, call, nearAmount, todayUsage, type Capsule, type Signer } from "./tally";
 
@@ -46,8 +48,20 @@ export class Refused extends Error {
   }
 }
 
+/** Sends a signed delegate to a relayer and returns its tx hash and `pay`'s outcome. */
+export type Relay = (delegate: string) => Promise<{ hash: string; outcome: unknown }>;
+
+/** The app's own relayer (`/api/relay`), which pays the gas. */
+export const appRelay: Relay = async (delegate) => {
+  const r = await fetch("/api/relay", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ delegate }) });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error ?? "relay failed");
+  return j;
+};
+
 /**
- * The agent's function-call key submits `pay` on the owner's account. When the owner must approve,
+ * The agent's function-call key signs `pay` on the owner's account as a NEP-366 delegate action and a
+ * relayer pays the gas (gasless). Without a relay it sends the transaction itself. When the owner must approve,
  * the contract parks it as a Second Look and the owner key (after a fresh Face ID) approves it.
  */
 export async function pay(
@@ -57,18 +71,27 @@ export async function pay(
   m: SignedMenu,
   item: Item,
   extra: { memo?: string; attestation?: string } = {},
-): Promise<{ hash: string; receipt: string; ms: number; cosigned: boolean }> {
+  relay: Relay | null = typeof window === "undefined" ? null : appRelay,
+): Promise<{ hash: string; receipt: string; ms: number; cosigned: boolean; gasless: boolean }> {
   const idx = m.items.findIndex((i) => i.itemId === item.itemId);
   if (idx < 0) throw new Error("Item not on this menu");
   const args = payArgs(m, item, buildTree(m.items).proofs[idx], extra);
   const t0 = performance.now(); // settlement time: broadcast → final outcome
-  const r = await call(agent, TALLY, "pay", { args }, 0n, undefined, capsuleId);
+  let r: { hash: string; value: unknown };
+  if (relay) {
+    const delegate = await signPayDelegate({ provider, ownerId: capsuleId, agentKey: agent.secret as KeyPairString, contractId: TALLY, args });
+    const j = await relay(delegate);
+    r = { hash: j.hash, value: j.outcome };
+  } else {
+    r = await call(agent, TALLY, "pay", { args }, 0n, undefined, capsuleId);
+  }
+  const gasless = !!relay;
   const out = r.value as Outcome;
   if (out.status === "rejected") throw new Refused(out.code, out.reason, out.frozen);
-  if (out.status === "paid") return { hash: r.hash, receipt: `${out.receipt_id}`, ms: Math.round(performance.now() - t0), cosigned: false };
+  if (out.status === "paid") return { hash: r.hash, receipt: `${out.receipt_id}`, ms: Math.round(performance.now() - t0), cosigned: false, gasless };
   if (!owner) throw new Refused("second_look", out.reasons.join("; "), false);
   const a = await call(owner, TALLY, "approve", { pending_id: out.pending_id });
-  return { hash: a.hash, receipt: `${(a.value as { receipt_id: number }).receipt_id}`, ms: Math.round(performance.now() - t0), cosigned: true };
+  return { hash: a.hash, receipt: `${(a.value as { receipt_id: number }).receipt_id}`, ms: Math.round(performance.now() - t0), cosigned: true, gasless };
 }
 
 /** Checked before Face ID, so a repeat tap hears "Already paid" without a prompt. */
