@@ -14,6 +14,7 @@
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
+    "@hot-labs/near-connect": "0.11.4",
     "@noble/curves": "^1.9.7",
     "@noble/hashes": "^1.8.0",
     "@tally-near/sdk": "workspace:*",

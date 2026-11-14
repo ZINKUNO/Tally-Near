@@ -22,7 +22,8 @@ export type NearKey = {
   publicKey: string;
   secret: KeyPairString;
 };
-export type Keys = { owner: NearKey & { accountId: string }; agent: NearKey; merchant: NearKey; end(): void };
+/** `owner.wallet` is set when a NEAR wallet (not the passkey) holds the owner key. */
+export type Keys = { owner: NearKey & { accountId: string; wallet?: import("./wallet").WalletLike }; agent: NearKey; merchant: NearKey; end(): void };
 
 function keyFrom(seed: Uint8Array): { publicKey: string; secret: KeyPairString; raw: Uint8Array } {
   const pub = ed25519.getPublicKey(seed);
