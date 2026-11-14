@@ -6,8 +6,8 @@ import { Account, FailoverRpcProvider, JsonRpcProvider, KeyPairSigner, type KeyP
 import type { PayArgs } from './menu.ts';
 
 export const RPC = {
-  testnet: 'https://rpc.testnet.near.org,https://test.rpc.fastnear.com',
-  mainnet: 'https://rpc.mainnet.near.org,https://free.rpc.fastnear.com',
+  testnet: 'https://test.rpc.fastnear.com,https://near-testnet.drpc.org',
+  mainnet: 'https://free.rpc.fastnear.com,https://near.drpc.org',
 } as const;
 
 export type Level = 'allow' | 'warn' | 'block';
