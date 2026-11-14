@@ -69,15 +69,18 @@ and compare hashes.
 
 | Check | Value |
 | --- | --- |
-| Reproducible build of commit [`3ef9d93`](https://github.com/ZINKUNO/Tally-Near/tree/3ef9d9353afef1bea90f122ba0560851ac465a2a) | SHA-256 bs58 `6HcRTRu6sL2VuEsfqTQTu9UArgtQnmChxNMokXcxSjx3` |
-| On-chain `code_hash` of `tallynear.testnet` | `6HcRTRu6sL2VuEsfqTQTu9UArgtQnmChxNMokXcxSjx3` (same) |
-| Deploy transaction | [6qexWrYU…](https://testnet.nearblocks.io/txns/6qexWrYUjvRDgThaVSSdKgkamCH2BcraKu6uTwjQrr5g) |
-| `contract_source_metadata` (NEP-330 1.3.0) | `source_code_snapshot: git+https://github.com/ZINKUNO/Tally-Near?rev=3ef9d93…` |
+| Reproducible build of commit [`d1dc9a8`](https://github.com/ZINKUNO/Tally-Near/tree/d1dc9a857d0e4747208dd328d2c27c6ac0127563) | SHA-256 bs58 `DW5Qt5jUd1jXenDMt7gM1LHz8vh7Mru3GRNGnhmRbAde` |
+| On-chain `code_hash` of `tallynear.testnet` | `DW5Qt5jUd1jXenDMt7gM1LHz8vh7Mru3GRNGnhmRbAde` (same) |
+| Deploy transaction | [9Drgr2Xf…](https://testnet.nearblocks.io/txns/9Drgr2XfjtxKebL4sA8XGjS5cH3utmX6eQsbRZKJwVKe) |
+| `contract_source_metadata` (NEP-330 1.3.0) | `source_code_snapshot: git+https://github.com/ZINKUNO/Tally-Near?rev=d1dc9a8…` |
+| Earlier deployment, same procedure | commit `3ef9d93` → `6HcRTRu6…`, tx [6qexWrYU…](https://testnet.nearblocks.io/txns/6qexWrYUjvRDgThaVSSdKgkamCH2BcraKu6uTwjQrr5g) |
 
 Reproduce:
 ```bash
-git checkout 3ef9d9353afef1bea90f122ba0560851ac465a2a
+git checkout d1dc9a857d0e4747208dd328d2c27c6ac0127563
 cd contracts/tally && cargo near build reproducible-wasm     # prints the SHA-256 bs58 above
+curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_account","finality":"final","account_id":"tallynear.testnet"}}'
 near contract call-function as-read-only tallynear.testnet contract_source_metadata json-args '{}' network-config testnet now
 ```
 
