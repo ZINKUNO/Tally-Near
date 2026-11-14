@@ -12,10 +12,12 @@
     "mcp": "node --experimental-strip-types src/mcp.ts",
     "test": "node --test --experimental-strip-types test/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "mcp:smoke": "node --experimental-strip-types src/mcp-smoke.ts"
+    "mcp:smoke": "node --experimental-strip-types src/mcp-smoke.ts",
+    "verify-tee": "node --experimental-strip-types src/verify-tee.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
+    "@phala/dcap-qvl-node": "^0.3.3",
     "@tally-near/sdk": "workspace:*",
     "near-api-js": "7.4.0",
     "zod": "^4.6.7"

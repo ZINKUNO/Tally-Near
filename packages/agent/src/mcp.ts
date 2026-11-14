@@ -8,6 +8,7 @@
  *   tally_menu            fetch + verify a merchant's signed menu, firewalled (category/price/floor only)
  *   tally_check_merchant  counterparty check: on-chain Guard + account signals -> sign / ask_human / refuse
  *   tally_buy             run one purchase end to end; the contract answers paid / second_look / rejected
+ *   tally_verify_tee      verify the NEAR AI Cloud gateway's Intel TDX quote and its nonce binding
  *   tally_quote_topup     live NEAR Intents price for funding the allowance from another chain (dry quote)
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -15,6 +16,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { ORIGINS, checkCounterparty, dryQuote, explorerTx, fromUnits, verifyMenu, type OriginId } from '@tally-near/sdk';
 import { buy, loadMenu } from './agent.ts';
+import { gatewayAttestation } from './attestation.ts';
 import { agentConfig } from './config.ts';
 import { firewall } from './firewall.ts';
 
@@ -89,6 +91,15 @@ server.registerTool(
       forceIndex: item_index, forceReason: item_index === undefined ? undefined : 'chosen by the calling model',
     });
     return text({ status: r.status, item: r.item && { ...r.item, price: fromUnits(r.item.price) }, tx: r.txHash && explorerTx(r.txHash), steps: r.steps });
+  },
+);
+
+server.registerTool(
+  'tally_verify_tee',
+  { description: "Verify that NEAR AI Cloud's gateway runs in a genuine Intel TDX TEE: fetch a quote bound to a fresh nonce, verify it with Intel DCAP collateral, and check the quote binds the gateway signing key and the nonce." },
+  async () => {
+    const a = await gatewayAttestation();
+    return text(a ? { verified: a.verified, intel_dcap_status: a.status ?? null, binds_signing_key: a.bindsAddress ?? null, binds_nonce: a.bindsNonce ?? null, signing_address: a.signingAddress, nonce: a.nonce, quote_sha256: a.digest } : 'gateway attestation unavailable');
   },
 );
 

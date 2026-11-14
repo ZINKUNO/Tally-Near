@@ -88,7 +88,7 @@ export async function buy(o: BuyOptions): Promise<BuyResult> {
   add('plan', true, `${p.planner}: item #${p.index} (${safe.category}, ${safe.price}) — ${p.reason}`);
 
   const att = await gatewayAttestation();
-  add('attest', !!att, att ? `NEAR AI Cloud gateway quote ${att.digest.slice(0, 16)}… bound to nonce ${att.nonce.slice(0, 8)}…` : 'gateway attestation unavailable');
+  add('attest', !!att?.verified, att ? (att.verified ? `NEAR AI Cloud TDX quote verified (Intel DCAP ${att.status}), binds the gateway key and our nonce ${att.nonce.slice(0, 8)}…` : `NEAR AI Cloud quote ${att.digest.slice(0, 16)}… fetched, not verified`) : 'gateway attestation unavailable');
 
   const args = payArgs(menu, p.index, { memo: `${o.goal.slice(0, 60)} | ${p.reason}`.slice(0, 150), attestation: att?.label });
   o.tamper?.(args);

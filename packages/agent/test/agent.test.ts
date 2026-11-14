@@ -4,7 +4,7 @@ import { KeyPair } from 'near-api-js';
 import { signMenu } from '@tally-near/sdk';
 import { categoryOf, cheapestMatch, firewall } from '../src/firewall.ts';
 import { plan, planWithRules } from '../src/planner.ts';
-import { gatewayAttestation } from '../src/attestation.ts';
+import { checkBindings, gatewayAttestation } from '../src/attestation.ts';
 
 const menu = signMenu({
   contractId: 'tally.testnet', merchantId: 'shop.testnet', secret: KeyPair.fromRandom('ed25519').toString(), nonce: 1,
@@ -50,10 +50,25 @@ test('model planner: valid answer is used, out-of-range answer falls back to rul
 test('attestation requires the nonce to be echoed', async () => {
   const echo = (async (url: string) => {
     const nonce = new URL(url).searchParams.get('nonce');
-    return { ok: true, json: async () => ({ gateway_attestation: { intel_quote: 'abcd', request_nonce: nonce, signing_address: 'x' } }) };
+    return { ok: true, json: async () => ({ gateway_attestation: { intel_quote: 'abcd', request_nonce: nonce, signing_address: 'aa' } }) };
   }) as any;
-  const a = await gatewayAttestation(echo);
-  assert.ok(a && a.label.startsWith('nearai-gw:'));
+  const a = await gatewayAttestation(echo, async () => null);
+  assert.ok(a && a.label.startsWith('nearai-gw:') && !a.verified);
   const stale = (async () => ({ ok: true, json: async () => ({ gateway_attestation: { intel_quote: 'abcd', request_nonce: '00' } }) })) as any;
-  assert.equal(await gatewayAttestation(stale), null);
+  assert.equal(await gatewayAttestation(stale, async () => null), null);
+});
+
+test('a verified quote must bind the signing address and our nonce', async () => {
+  let nonce = '';
+  const echo = (async (url: string) => {
+    nonce = new URL(url).searchParams.get('nonce')!;
+    return { ok: true, json: async () => ({ gateway_attestation: { intel_quote: 'abcd', request_nonce: nonce, signing_address: 'ab'.repeat(32) } }) };
+  }) as any;
+  const good = await gatewayAttestation(echo, async () => ({ status: 'UpToDate', reportData: 'ab'.repeat(32) + nonce }));
+  assert.ok(good?.verified && good.label.startsWith('nearai-tdx:UpToDate:'));
+  const wrongNonce = await gatewayAttestation(echo, async () => ({ status: 'UpToDate', reportData: 'ab'.repeat(32) + '00'.repeat(32) }));
+  assert.equal(wrongNonce?.verified, false);
+  const badQuote = await gatewayAttestation(echo, async () => ({ status: 'Revoked', reportData: 'ab'.repeat(32) + nonce }));
+  assert.equal(badQuote?.verified, false);
+  assert.deepEqual(checkBindings('cd'.repeat(32) + nonce, 'ab'.repeat(32), nonce), { bindsAddress: false, bindsNonce: true });
 });
