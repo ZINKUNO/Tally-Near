@@ -2,12 +2,12 @@
  * Thin client for the Tally contract. Views go through public RPC; `AgentWallet` signs `pay`
  * with the capsule's function-call key and nothing else.
  */
-import { Account, JsonRpcProvider, KeyPairSigner, type KeyPairString } from 'near-api-js';
+import { Account, FailoverRpcProvider, JsonRpcProvider, KeyPairSigner, type KeyPairString } from 'near-api-js';
 import type { PayArgs } from './menu.ts';
 
 export const RPC = {
-  testnet: 'https://test.rpc.fastnear.com',
-  mainnet: 'https://free.rpc.fastnear.com',
+  testnet: 'https://rpc.testnet.near.org,https://test.rpc.fastnear.com',
+  mainnet: 'https://rpc.mainnet.near.org,https://free.rpc.fastnear.com',
 } as const;
 
 export type Level = 'allow' | 'warn' | 'block';
@@ -97,11 +97,12 @@ export type Pending = {
 export type Preview = { outcome: 'paid' | 'second_look' | 'rejected'; code: Reject | null; reason: string | null; reasons: string[]; guard: Verdict | null };
 
 export class TallyClient {
-  readonly provider: JsonRpcProvider;
+  readonly provider: FailoverRpcProvider;
   readonly contractId: string;
+  /** `rpcUrl` may list several comma-separated endpoints; calls fail over between them. */
   constructor(contractId: string, rpcUrl: string = RPC.testnet) {
     this.contractId = contractId;
-    this.provider = new JsonRpcProvider({ url: rpcUrl });
+    this.provider = new FailoverRpcProvider(rpcUrl.split(',').map((url) => new JsonRpcProvider({ url: url.trim() })));
   }
 
   view<T>(method: string, args: Record<string, unknown> = {}): Promise<T> {

@@ -28,6 +28,8 @@ export async function checkCounterparty(opts: {
   pins?: CodePins;
   nearblocks?: string | null;
   fetch?: typeof fetch;
+  /** Payout accounts younger than this draw a warning. Default 24 h. */
+  minAccountAgeMs?: number;
 }): Promise<CheckResult> {
   const f = opts.fetch ?? fetch;
   const signals: Signal[] = [];
@@ -62,11 +64,12 @@ export async function checkCounterparty(opts: {
         const j = (await r.json()) as { account?: { created?: { block_timestamp?: number | null } }[] };
         const ts = j.account?.[0]?.created?.block_timestamp;
         if (ts) {
-          const ageDays = (Date.now() - ts / 1e6) / DAY_MS;
+          const ageMs = Date.now() - ts / 1e6;
+          const ageDays = ageMs / DAY_MS;
           signals.push({
             name: 'payout_age',
-            level: ageDays < 1 ? 'warn' : 'allow',
-            detail: `payout account is ${ageDays.toFixed(1)} days old`,
+            level: ageMs < (opts.minAccountAgeMs ?? DAY_MS) ? 'warn' : 'allow',
+            detail: ageDays >= 1 ? `payout account is ${ageDays.toFixed(1)} days old` : `payout account is ${Math.round(ageMs / 60_000)} minutes old`,
           });
         }
       } catch {
