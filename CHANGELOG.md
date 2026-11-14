@@ -14,4 +14,4 @@
   Face ID, red team via `preview_pay`, receipts from the contract, family top-ups with live NEAR Intents
   quotes, agent kill switch.
 - Testnet deployment `tallynear.testnet`, recorded happy-path and attack runs.
-- Tests: 38 contract unit, 5 sandbox, 11 format, 10 SDK, 5 agent, 62 app, 6 live.
+- Tests: 38 contract unit, 5 sandbox, 11 format, 10 SDK, 5 agent, 63 app, 6 live.
