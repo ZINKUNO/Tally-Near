@@ -4,6 +4,7 @@
  */
 import { Account, FailoverRpcProvider, JsonRpcProvider, KeyPairSigner, type KeyPairString } from 'near-api-js';
 import type { PayArgs } from './menu.ts';
+import { signPayDelegate } from './relay.ts';
 
 export const RPC = {
   testnet: 'https://test.rpc.fastnear.com,https://near-testnet.drpc.org',
@@ -131,10 +132,21 @@ export class AgentWallet {
   readonly account: Account;
   readonly client: TallyClient;
   readonly ownerId: string;
+  private readonly agentKey: KeyPairString;
   constructor(client: TallyClient, ownerId: string, agentKey: KeyPairString) {
     this.client = client;
     this.ownerId = ownerId;
+    this.agentKey = agentKey;
     this.account = new Account(ownerId, client.provider, KeyPairSigner.fromSecretKey(agentKey));
+  }
+
+  /** Gasless: sign `pay` as a NEP-366 delegate and let a relayer (e.g. the app's `/api/relay`) pay the gas. */
+  async payGasless(args: PayArgs, relayUrl: string): Promise<{ outcome: PayOutcome; hash: string }> {
+    const delegate = await signPayDelegate({ provider: this.client.provider, ownerId: this.ownerId, agentKey: this.agentKey, contractId: this.client.contractId, args });
+    const r = await fetch(relayUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ delegate }) });
+    const j = (await r.json()) as { hash?: string; outcome?: PayOutcome; error?: string };
+    if (!r.ok || !j.outcome) throw new Error(`relay: ${j.error ?? r.status}`);
+    return { outcome: j.outcome, hash: j.hash ?? '' };
   }
 
   async pay(args: PayArgs): Promise<{ outcome: PayOutcome; hash: string }> {
