@@ -8,7 +8,9 @@ import type { SignedMenu } from '@tally-near/sdk';
 
 export type SafeItem = { index: number; category: string; price: string; cheapest_in_category: boolean };
 
-export const CATEGORY_NAMES: Record<number, string> = { 1: 'coffee', 2: 'pastry', 3: 'merch' };
+export const CATEGORY_NAMES: Record<number, string> = {
+  0: 'food', 1: 'drinks', 2: 'snacks', 3: 'coffee', 4: 'transit', 5: 'groceries', 6: 'digital', 7: 'services', 8: 'tips', 9: 'merch',
+};
 
 const usd = (units: bigint) => (Number(units) / 1e6).toFixed(2);
 
@@ -26,7 +28,9 @@ export function categoryOf(goal: string, categoryNames = CATEGORY_NAMES): number
   const g = goal.toLowerCase();
   const synonyms: Record<string, string[]> = {
     coffee: ['coffee', 'latte', 'espresso', 'flat white', 'cappuccino', 'americano'],
-    pastry: ['pastry', 'croissant', 'cake', 'bread', 'muffin', 'snack'],
+    food: ['food', 'pastry', 'croissant', 'cake', 'bread', 'muffin', 'sandwich', 'wrap', 'lunch'],
+    drinks: ['drink', 'chai', 'tea', 'juice', 'water', 'soda'],
+    tips: ['tip'],
     merch: ['merch', 'tote', 'bag', 'mug', 'shirt'],
   };
   for (const [id, name] of Object.entries(categoryNames)) {

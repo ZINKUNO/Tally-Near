@@ -22,7 +22,7 @@ async function main() {
   log('contract', ids.contract);
   await loadLiveKeys(Object.values(ids));
   const window = Number(process.env.GUARD_NEW_MERCHANT_MS ?? 120_000);
-  await call(ids.contract, ids.contract, 'set_config', { new_merchant_ms: window, new_key_ms: window });
+  await call(ids.contract, ids.contract, 'set_config', { new_merchant_ms: window, new_key_ms: window, min_bond: near(0.2).toString() });
   log('config', `Guard warns about merchants younger than ${window / 1000}s on this deployment`);
 
   for (const [id, name, key, bond] of [
@@ -43,14 +43,14 @@ async function main() {
     const rules = {
       per_tx_cap: '10000000',
       daily_cap: '25000000',
-      categories: [1, 2],
-      min_merchant_bond: near(0.5).toString(),
+      categories: [0, 1, 3, 8],
+      min_merchant_bond: near(0.2).toString(),
       expiry_ms: Date.now() + 30 * 86_400_000,
       allow_extended: false,
       tripwire: 3,
     };
     await call(ids.owner, ids.contract, 'create_capsule', { rules, agent_key: pub(keys.agent) }, near(0.1));
-    log('capsule', `${ids.owner}: 10 tUSDC per purchase, 25 tUSDC a day, coffee + pastry, tripwire 3`);
+    log('capsule', `${ids.owner}: 10 tUSDC per purchase, 25 tUSDC a day, food, drinks, coffee and tips, tripwire 3`);
   }
   const keyList = await client.provider.viewAccessKeyList({ accountId: ids.owner } as any).catch(() => ({ keys: [] as any[] }));
   if (!(keyList as any).keys.some((k: any) => k.public_key === pub(keys.agent))) {
