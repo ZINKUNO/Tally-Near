@@ -1,7 +1,7 @@
 # Tally contract
 
 near-sdk 5. Deployed on testnet as `tallynear.testnet`. Build: `cargo near build non-reproducible-wasm`.
-Tests: `cargo test -p tally` (42 unit tests + 5 sandbox tests on a local NEAR node).
+Tests: `cargo test -p tally` (47 unit tests + 5 sandbox tests on a local NEAR node).
 
 ## Methods
 
