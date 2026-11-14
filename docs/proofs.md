@@ -60,3 +60,23 @@ On-chain: receipt #24 ([AErn655d…](https://testnet.nearblocks.io/txns/AErn655d
 Also: MCP tool `tally_verify_tee`; tests `a verified quote must bind the signing address and our nonce`.
 Scope: the app on Cloudflare records the nonce-bound quote digest (`nearai-gw:`); the full DCAP check runs in the agent
 (Node), because the verifier's WebAssembly build loads from disk.
+
+## 4. Verifiable contract: reproducible build + NEP-330 source metadata
+
+The deployed contract is built in the pinned Docker image `sourcescan/cargo-near:0.22.0-rust-1.97.1` from a
+committed revision of this repo, and embeds NEP-330 metadata naming that revision. Anyone can rebuild it
+and compare hashes.
+
+| Check | Value |
+| --- | --- |
+| Reproducible build of commit [`3ef9d93`](https://github.com/ZINKUNO/Tally-Near/tree/3ef9d9353afef1bea90f122ba0560851ac465a2a) | SHA-256 bs58 `6HcRTRu6sL2VuEsfqTQTu9UArgtQnmChxNMokXcxSjx3` |
+| On-chain `code_hash` of `tallynear.testnet` | `6HcRTRu6sL2VuEsfqTQTu9UArgtQnmChxNMokXcxSjx3` (same) |
+| Deploy transaction | [6qexWrYU…](https://testnet.nearblocks.io/txns/6qexWrYUjvRDgThaVSSdKgkamCH2BcraKu6uTwjQrr5g) |
+| `contract_source_metadata` (NEP-330 1.3.0) | `source_code_snapshot: git+https://github.com/ZINKUNO/Tally-Near?rev=3ef9d93…` |
+
+Reproduce:
+```bash
+git checkout 3ef9d9353afef1bea90f122ba0560851ac465a2a
+cd contracts/tally && cargo near build reproducible-wasm     # prints the SHA-256 bs58 above
+near contract call-function as-read-only tallynear.testnet contract_source_metadata json-args '{}' network-config testnet now
+```
