@@ -121,7 +121,7 @@ function SendInner() {
         </div>
       </Card>
 
-      <IntentsQuote usd={amount} />
+      <IntentsQuote usd={amount} recipient={id ?? undefined} />
 
       {(err || s.error) && <p className="rounded-2xl bg-blocked/10 p-3 text-sm text-blocked">{err || s.error}</p>}
 
