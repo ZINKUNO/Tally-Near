@@ -239,3 +239,22 @@ export async function registerMerchant(owner: Signer, name: string, signingKey: 
   await call(owner, TOKEN, "mint", { amount: "0" }); // the payout account must hold a tUSDC balance to receive sales
   return call(owner, TALLY, "register_merchant", { name: name.slice(0, 64), signing_key: signingKey, payout: id }, bond);
 }
+
+/**
+ * Kill switch, stronger than pause: the contract forgets the agent key and the key itself is deleted
+ * from the account, so nothing signed with it can even reach Tally.
+ */
+export async function revokeAgent(owner: Signer, agentPublicKey: string) {
+  await call(owner, TALLY, "set_agent_key", { agent_key: null });
+  const keys = (await provider.viewAccessKeyList({ accountId: owner.accountId ?? owner.address } as never)) as unknown as { keys: { public_key: string }[] };
+  if (keys.keys.some((k) => k.public_key === agentPublicKey)) await accountOf(owner).deleteKey(agentPublicKey);
+}
+
+/** Gives the (same, passkey-derived) agent key back its pay-only access. */
+export async function restoreAgent(owner: Signer, agentPublicKey: string) {
+  await call(owner, TALLY, "set_agent_key", { agent_key: agentPublicKey });
+  const keys = (await provider.viewAccessKeyList({ accountId: owner.accountId ?? owner.address } as never)) as unknown as { keys: { public_key: string }[] };
+  if (!keys.keys.some((k) => k.public_key === agentPublicKey)) {
+    await accountOf(owner).addFunctionCallAccessKey({ publicKey: agentPublicKey, contractId: TALLY, methodNames: ["pay"], allowance: YOCTO / 4n });
+  }
+}
