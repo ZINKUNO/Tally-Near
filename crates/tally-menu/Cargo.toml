@@ -1,0 +1,12 @@
+[package]
+name = "tally-menu"
+version = "0.1.0"
+description = "Byte formats shared by the Tally contract, SDK and tests: signed menu header, catalog leaves, Merkle proofs"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+sha2 = { version = "0.10", default-features = false }
+
+[dev-dependencies]
+hex = "0.4"
