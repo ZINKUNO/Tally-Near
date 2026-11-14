@@ -1,0 +1,7 @@
+{
+  "network": "testnet",
+  "tally": "tallynear.testnet",
+  "token": "tallynear-usdc.testnet",
+  "demoMerchant": "tallynear-cafe.testnet",
+  "sponsor": "tallynear-sponsor.testnet"
+}
