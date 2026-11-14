@@ -37,6 +37,7 @@ impl Tally {
                 frozen_reason: None,
                 strikes: vec![],
                 attempts: vec![],
+                topups: vec![],
                 storage_deposit: U128(deposit),
                 created_at_ms: now,
             },

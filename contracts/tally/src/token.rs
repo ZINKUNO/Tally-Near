@@ -9,6 +9,12 @@ use near_sdk::{ext_contract, Gas, PromiseError, PromiseOrValue, Promise};
 pub const GAS_FT_TRANSFER: Gas = Gas::from_tgas(10);
 pub const GAS_CALLBACK: Gas = Gas::from_tgas(10);
 
+#[near(serializers = [json])]
+struct FundMsg {
+    owner: AccountId,
+    note: Option<String>,
+}
+
 #[ext_contract(ext_ft)]
 #[allow(dead_code)]
 trait FungibleToken {
@@ -24,19 +30,33 @@ pub(crate) fn ft_transfer(token: AccountId, to: AccountId, amount: U128, memo: &
 
 #[near]
 impl Tally {
-    /// NEP-141 receiver. Tokens sent with `ft_transfer_call(tally, amount, msg: "")` credit the
-    /// sender's capsule. Without a capsule, or from another token, the whole amount is returned.
+    /// NEP-141 receiver. `msg` picks whose capsule the tokens fund:
+    ///   ""                                   the sender's own capsule
+    ///   `{"owner":"alice.near","note":"..."}` someone else's (a family top-up)
+    /// Without a matching capsule, or from another token, the whole amount is returned.
     pub fn ft_on_transfer(&mut self, sender_id: AccountId, amount: U128, msg: String) -> PromiseOrValue<U128> {
-        let _ = msg;
         if env::predecessor_account_id() != self.config.token {
             return PromiseOrValue::Value(amount);
         }
-        let Some(c) = self.capsules.get_mut(&sender_id) else {
+        let (owner, note) = if msg.trim().is_empty() {
+            (sender_id.clone(), String::new())
+        } else {
+            match near_sdk::serde_json::from_str::<FundMsg>(&msg) {
+                Ok(m) => (m.owner, m.note.unwrap_or_default()),
+                Err(_) => return PromiseOrValue::Value(amount),
+            }
+        };
+        let Some(c) = self.capsules.get_mut(&owner) else {
             return PromiseOrValue::Value(amount);
         };
         c.balance = U128(c.balance.0 + amount.0);
+        let note: String = note.chars().take(64).collect();
+        c.topups.push(Topup { from: sender_id.clone(), amount, note: note.clone(), at_ms: now_ms() });
+        if c.topups.len() > MAX_ATTEMPT_LOG {
+            c.topups.remove(0);
+        }
         let balance = c.balance;
-        emit("funded", json!({ "owner": sender_id, "amount": amount, "balance": balance }));
+        emit("funded", json!({ "owner": owner, "from": sender_id, "amount": amount, "balance": balance, "note": note }));
         PromiseOrValue::Value(U128(0))
     }
 

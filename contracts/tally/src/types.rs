@@ -54,6 +54,16 @@ pub struct Attempt {
     pub reason: String,
 }
 
+/// Money that arrived in a capsule, from the owner or from family.
+#[near(serializers = [borsh, json])]
+#[derive(Clone, Debug)]
+pub struct Topup {
+    pub from: AccountId,
+    pub amount: U128,
+    pub note: String,
+    pub at_ms: u64,
+}
+
 /// A user's spending capsule: rules, a token balance the agent may spend from, and the one
 /// function-call key that counts as "the agent".
 #[near(serializers = [borsh, json])]
@@ -71,6 +81,8 @@ pub struct Capsule {
     pub strikes: Vec<u64>,
     /// Last 20 rejected attempts.
     pub attempts: Vec<Attempt>,
+    /// Last 20 deposits, including family top-ups from other accounts.
+    pub topups: Vec<Topup>,
     pub storage_deposit: U128,
     pub created_at_ms: u64,
 }
