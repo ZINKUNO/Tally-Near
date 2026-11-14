@@ -12,7 +12,7 @@ describe("per-IP limiter", () => {
 });
 
 describe("global budget", () => {
-  it("stops spending once the hourly MON budget is used", () => {
+  it("stops spending once the hourly NEAR budget is used", () => {
     const spend = createBudget(100n, 3_600_000);
     expect(spend(60n, 0)).toBe(true);
     expect(spend(60n, 10)).toBe(false);

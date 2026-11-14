@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tally app
 
-## Getting Started
-
-First, run the development server:
+The phone-first Tally app (Next.js). One Face ID passkey derives three NEAR keys: the owner's
+implicit account, the agent's pay-only function-call key, and a café's menu signing key.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # fill in the sponsor and demo-counter secrets
+pnpm dev                     # http://localhost:3000
+pnpm test                    # 58 unit tests
+LIVE=1 pnpm test             # + live testnet end to end (needs .env.local)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Route | What it does |
+| --- | --- |
+| `/` | Sign up / sign in with a passkey |
+| `/allowance` | Open an allowance: rules, first deposit, the agent's pay-only key |
+| `/home` | Balance, today's spend, pause, ask family to top up |
+| `/scan` | Scan a counter's QR, the agent proposes, the contract decides |
+| `/counter` | The demo café's live, re-signed menu QR |
+| `/merchant` | Open your own counter (0.2 NEAR bond) and see sales |
+| `/redteam` | Four attacks against the live menu, judged by `preview_pay` |
+| `/receipts` | On-chain receipts, family top-ups, blocked attempts |
+| `/send/<account>` | Family top-up link |
+| `/api/onboard` | Sponsor funds a new implicit account (NEAR + test USD) |
+| `/api/counter` | Freshly signed demo menu |
+| `/api/agent` | NEAR AI Cloud pick behind the context firewall, rule fallback |

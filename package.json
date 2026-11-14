@@ -4,10 +4,14 @@
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@10.19.0",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
+    "verify": "./scripts/verify.sh",
     "test": "pnpm -r test",
-    "build": "pnpm -r build",
+    "build": "pnpm --filter @tally-near/web build",
+    "dev": "pnpm --filter @tally-near/web dev",
     "typecheck": "pnpm -r typecheck"
   }
 }
