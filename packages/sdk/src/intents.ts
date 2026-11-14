@@ -55,3 +55,27 @@ export async function dryQuote(origin: OriginId, usd: number, opts: { jwt?: stri
   });
   return parseQuote(await r.json());
 }
+
+// ---------- real execution: a 1Click deposit address ----------
+
+export type Deposit = { depositAddress: string; amountIn: string; amountOut: string; deadline: string; timeEstimate: number };
+export type DepositStatus = { status: string; amountOut?: string; txHashes?: string[] };
+
+/** A live (non-dry) quote: send `usd` of USDC on `origin` to the returned address; NEAR USDC lands at `recipient` on NEAR mainnet. */
+export function depositRequest(origin: OriginId, usd: number, recipient: string, refundTo: string, now = Date.now()) {
+  if (!/^0x[0-9a-fA-F]{40}$/.test(refundTo)) throw new Error('refund address must be an 0x… address on the origin chain');
+  if (!/^(([a-z\d]+[-_])*[a-z\d]+\.)*([a-z\d]+[-_])*[a-z\d]+$/.test(recipient) || recipient.endsWith('.testnet')) {
+    throw new Error('recipient must be a NEAR mainnet account (a 64-hex implicit account works on both networks)');
+  }
+  return { ...quoteRequest(origin, usd, now), dry: false, recipient, refundTo, deadline: new Date(now + 24 * 3600_000).toISOString() };
+}
+
+export function parseDeposit(j: { quote?: { depositAddress?: string; amountIn?: string; amountOut?: string; deadline?: string; timeEstimate?: number }; message?: string }): Deposit {
+  const q = j.quote;
+  if (!q?.depositAddress) throw new Error(j.message ?? 'no deposit address');
+  return { depositAddress: q.depositAddress, amountIn: q.amountIn ?? '', amountOut: q.amountOut ?? '', deadline: q.deadline ?? '', timeEstimate: q.timeEstimate ?? 0 };
+}
+
+export function parseStatus(j: { status?: string; swapDetails?: { amountOut?: string; destinationChainTxHashes?: { hash: string }[] } }): DepositStatus {
+  return { status: j.status ?? 'UNKNOWN', amountOut: j.swapDetails?.amountOut, txHashes: (j.swapDetails?.destinationChainTxHashes ?? []).map((t) => t.hash) };
+}
