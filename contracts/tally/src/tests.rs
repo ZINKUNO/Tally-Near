@@ -657,3 +657,34 @@ fn sales_are_listed_per_merchant() {
     assert_eq!(w.c.get_sales(acc("cafe.testnet"), None).len(), 1);
     assert!(w.c.get_sales(acc("other.testnet"), None).is_empty());
 }
+
+#[test]
+fn receipt_digest_binds_every_field_and_the_mpc_answer_is_stored() {
+    let mut w = world();
+    let m = cafe_menu(T0);
+    agent(&w, T0 + 1000);
+    w.c.pay(m.args(&w.menu_sk, 0));
+    w.c.on_payout(0, Ok(()));
+    let d0 = w.c.receipt_digest(0).unwrap();
+    assert_eq!(d0.len(), 64);
+    let mut r = w.c.get_receipt(0).unwrap().clone();
+    r.price = U128(1);
+    assert_ne!(hex::encode(crate::portable::digest_of(&acc("tally.testnet"), &r)), d0);
+    // what v1.signer-prod.testnet returns
+    let answer = near_sdk::serde_json::json!({ "scheme": "Secp256k1", "big_r": { "affine_point": "02ab" }, "s": { "scalar": "cd" }, "recovery_id": 1 });
+    let p = w.c.on_receipt_signed(0, d0.clone(), "ee".into(), Ok(answer)).unwrap();
+    assert_eq!((p.big_r.as_str(), p.s.as_str(), p.recovery_id), ("02ab", "cd", 1));
+    assert_eq!(w.c.get_receipt_signature(0).unwrap().digest, d0);
+    assert_eq!(p.signer.as_str(), "v1.signer-prod.testnet");
+}
+
+#[test]
+#[should_panic(expected = "only settled receipts are signed")]
+fn unsettled_receipts_are_not_signed() {
+    let mut w = world();
+    let m = cafe_menu(T0);
+    agent(&w, T0 + 1000);
+    w.c.pay(m.args(&w.menu_sk, 0)); // still `sending`
+    ctx("bob.testnet", &w.owner_pk, T0 + 2000, NearToken::from_yoctonear(1));
+    let _ = w.c.sign_receipt(0);
+}

@@ -16,6 +16,7 @@ mod dispute;
 mod guard;
 mod merchant;
 mod pay;
+pub mod portable;
 mod token;
 mod views;
 
