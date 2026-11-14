@@ -1186,6 +1186,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "near-contract-standards"
+version = "5.30.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff06657a4f2c530c00a81b130b3660433d5f133922e1ea808deacc56791bbded"
+dependencies = [
+ "near-sdk",
+]
+
+[[package]]
 name = "near-crypto"
 version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2411,6 +2420,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "tusdc"
+version = "0.1.0"
+dependencies = [
+ "near-contract-standards",
+ "near-sdk",
 ]
 
 [[package]]
