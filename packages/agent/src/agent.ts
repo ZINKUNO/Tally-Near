@@ -39,6 +39,8 @@ export type BuyOptions = {
   askHuman?: (question: string) => Promise<boolean>;
   /** Override the planner's choice (used by the attack demo to simulate a hijacked model). */
   forceIndex?: number;
+  /** Why the item was forced, for the step log. */
+  forceReason?: string;
   /** Mutate the arguments before signing (attack demo: an agent that lies about the price). */
   tamper?: (args: ReturnType<typeof payArgs>) => void;
   /** Skip the wrapper's own refusals and send anyway, to show the contract still refuses. */
@@ -75,7 +77,7 @@ export async function buy(o: BuyOptions): Promise<BuyResult> {
     if (!yes) return { status: 'needs_human', steps };
   }
 
-  const p = o.forceIndex !== undefined ? { index: o.forceIndex, reason: 'forced choice', planner: 'forced' } : await plan(o.goal, menu);
+  const p = o.forceIndex !== undefined ? { index: o.forceIndex, reason: o.forceReason ?? 'forced choice', planner: 'given' } : await plan(o.goal, menu);
   if (p.index === null) {
     add('plan', false, `${p.planner}: ${p.reason}`);
     return { status: 'nothing_to_buy', steps };
