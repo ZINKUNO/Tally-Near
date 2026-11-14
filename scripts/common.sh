@@ -21,7 +21,7 @@ view() {
   near contract call-function as-read-only "$1" "$2" json-args "$3" "${NET[@]}" now
 }
 exists() {
-  curl -s https://rpc.testnet.near.org -H 'content-type: application/json' \
+  curl -s https://test.rpc.fastnear.com -H 'content-type: application/json' \
     -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"query\",\"params\":{\"request_type\":\"view_account\",\"finality\":\"final\",\"account_id\":\"$1\"}}" |
     grep -q '"amount"'
 }
