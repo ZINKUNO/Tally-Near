@@ -96,7 +96,7 @@ impl Tally {
 }
 
 fn human(ms: u64) -> String {
-    if ms >= 3_600_000 && ms % 3_600_000 == 0 {
+    if ms >= 3_600_000 && ms.is_multiple_of(3_600_000) {
         format!("{} h", ms / 3_600_000)
     } else {
         format!("{} min", ms / 60_000)

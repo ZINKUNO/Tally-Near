@@ -92,7 +92,7 @@ impl Tally {
             menu_nonce,
             item_count,
         });
-        let signed = m.key_history.iter().filter_map(ed25519_bytes).any(|k| env::ed25519_verify(&sig, &header, &k));
+        let signed = m.key_history.iter().filter_map(ed25519_bytes).any(|k| env::ed25519_verify(&sig, header, &k));
         require!(signed, "signature does not match any key this merchant has used");
         let leaf_of = |l: &LeafProof| -> Item {
             Item {
