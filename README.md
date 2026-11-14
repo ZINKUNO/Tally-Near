@@ -8,7 +8,7 @@
 An AI agent may pay only for an item a merchant signed, at the signed price, to the registered
 merchant, inside your rules. A NEAR contract checks every payment; the agent's key can't do anything else.
 
-[Contract `tallynear.testnet`](https://testnet.nearblocks.io/address/tallynear.testnet) ·
+**[Live app](https://tally-near.adoranto737.workers.dev)** · [Demo café QR](https://tally-near.adoranto737.workers.dev/counter) · [Contract `tallynear.testnet`](https://testnet.nearblocks.io/address/tallynear.testnet) ·
 [Attack log](docs/attack-log.md) · [Happy-path log](docs/demo-log.md) · [Architecture](docs/architecture.md) · [Threat model](docs/threat-model.md) · [Verify every claim](VERIFY.md)
 
 Built at **NEAR HACKATHON** (Nov 2026) · Tracks: `security`, `agents`, `realworld` · MIT
@@ -40,6 +40,14 @@ limits on a card don't help: they can't tell *a latte at the price on the board*
 7. **A misbehaving agent locks itself out.** Three rejected attempts in an hour freeze the capsule.
 
 ## Try it
+
+**0. Use the live app (phone, 2 minutes).** Open https://tally-near.adoranto737.workers.dev on a phone
+(passkeys need Face ID / a fingerprint) and open https://tally-near.adoranto737.workers.dev/counter on a
+second screen. Do: **Get started** → see $50 of test USD arrive on a new NEAR account → **Set up my
+allowance** → **Create allowance** → tap the scan button and scan the counter (or **Use the demo café**)
+→ **Oat latte** → **Pay $4.50** → see *Paid*, with a NearBlocks link. Then **Large oat latte** → see
+**Second Look** → **Approve with Face ID**. Then **Settings → Attack your own agent** → see all four attacks
+refused. No wallet, extension or faucet: a sponsor account funds each new user on testnet.
 
 **1. Look at the live deployment (no keys, 1 minute).** With [near CLI](https://docs.near.org/tools/near-cli):
 
