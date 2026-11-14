@@ -3,6 +3,7 @@
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Button, Card, Spinner, usd } from "@/components/ui";
+import { IntentsQuote } from "@/components/IntentsQuote";
 import { EXPLORER } from "@/lib/chain";
 import { humanError } from "@/lib/errors";
 import { guessCurrency, localHint, remittanceSaving } from "@/lib/fx";
@@ -119,6 +120,8 @@ function SendInner() {
           ))}
         </div>
       </Card>
+
+      <IntentsQuote usd={amount} />
 
       {(err || s.error) && <p className="rounded-2xl bg-blocked/10 p-3 text-sm text-blocked">{err || s.error}</p>}
 
