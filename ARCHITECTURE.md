@@ -102,7 +102,7 @@ to their own account:
 | identity | the contract reads `env::signer_account_pk()` and compares it with the capsule's `agent_key` | Tally |
 | owner methods | `update_rules`, `approve`, `unfreeze`, `withdraw`… refuse a call signed by the agent key even if a wider key were issued | Tally |
 
-What that key **cannot** do, and the live refusals in [`attack-log.md`](attack-log.md) show it:
+What that key **cannot** do, and the live refusals in [`docs/attack-log.md`](docs/attack-log.md) show it:
 send NEAR (`AccessKeyRequiresFullAccess`), call any other method (`AccessKeyMethodNameMismatch`), call
 any other contract such as the token (`AccessKeyReceiverMismatch`).
 
