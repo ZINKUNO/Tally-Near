@@ -9,8 +9,8 @@ import { buildAttacks } from "../lib/attacks";
 import { DEMO_ITEMS, signMenu } from "../lib/counter";
 import { decodeQr, payArgs } from "../lib/menu";
 import { deriveKeys } from "../lib/passkey";
-import { pay } from "../lib/pay";
-import { chainNow, createAllowance, fundAllowance, readCapsule, restoreAgent, revokeAgent, rulesFromForm, usdBalance } from "../lib/tally";
+import { pay, type Relay } from "../lib/pay";
+import { chainNow, createAllowance, fundAllowance, nearBalance, readCapsule, restoreAgent, revokeAgent, rulesFromForm, usdBalance } from "../lib/tally";
 
 const live = process.env.LIVE === "1" && !!process.env.SPONSOR_KEY && !!process.env.DEMO_MERCHANT_SIGNER_KEY;
 const fresh = () => deriveKeys(crypto.getRandomValues(new Uint8Array(32)));
@@ -20,6 +20,14 @@ async function onboard(owner: string) {
   const r = await POST(new Request("http://x/api/onboard", { method: "POST", body: JSON.stringify({ owner }) }));
   expect(r.status).toBe(200);
 }
+/** The app's relayer route, called in-process. */
+const relay: Relay = async (delegate) => {
+  const { POST } = await import("../app/api/relay/route");
+  const r = await POST(new Request("http://x/api/relay", { method: "POST", body: JSON.stringify({ delegate }) }));
+  const j = await r.json();
+  if (r.status !== 200) throw new Error(j.error);
+  return j;
+};
 async function demoMenu() {
   const { GET } = await import("../app/api/counter/route");
   return decodeQr((await (await GET()).json()).qr);
@@ -61,6 +69,24 @@ describe.skipIf(!live)("live on testnet", () => {
     expect(c.balance).toBe(before + 5_000_000n);
     expect(c.topups.at(-1)?.note).toBe("For lunches");
   }, 120_000);
+
+  it("gasless: the agent pays through the NEP-366 relayer and the owner spends no NEAR on gas", async () => {
+    const before = await nearBalance(id);
+    const m = await demoMenu();
+    const r = await pay(me.agent, null, id, m, m.items[2], { memo: "gasless croissant" }, relay);
+    expect(r.gasless).toBe(true);
+    expect(r.cosigned).toBe(false);
+    expect(await nearBalance(id)).toBe(before);
+    const latest = (await client.receipts(id))[0];
+    expect(latest.price).toBe("3000000");
+    expect(latest.memo).toBe("gasless croissant");
+  }, 120_000);
+
+  it("the relayer refuses to sponsor anything but pay on Tally", async () => {
+    const { POST } = await import("../app/api/relay/route");
+    const r = await POST(new Request("http://x/api/relay", { method: "POST", body: JSON.stringify({ delegate: "AAAA" }) }));
+    expect(r.status).toBe(400);
+  });
 
   it("a revoked agent key can't reach Tally at all; restored, it pays again", async () => {
     await revokeAgent(me.owner, me.agent.publicKey);
