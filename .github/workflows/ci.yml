@@ -11,7 +11,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - name: Contract and format tests
-        run: cargo test --workspace
+        # sandbox tests (tests/sandbox.rs) need cargo-near and a local NEAR node: run them with SANDBOX=1 ./scripts/verify.sh
+        run: cargo test --workspace --lib
 
   typescript:
     runs-on: ubuntu-latest
