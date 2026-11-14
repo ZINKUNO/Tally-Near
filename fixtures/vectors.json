@@ -1,0 +1,73 @@
+{
+    "contract_id": "tally.testnet",
+    "merchant_id": "cafe.testnet",
+    "issued_at_ms": 1800000000000,
+    "expires_at_ms": 1800000300000,
+    "menu_nonce": 7,
+    "items": [
+        {
+            "id": "01010101010101010101010101010101",
+            "category": 1,
+            "price": "4500000",
+            "floor": "4500000"
+        },
+        {
+            "id": "02020202020202020202020202020202",
+            "category": 1,
+            "price": "5900000",
+            "floor": "4500000"
+        },
+        {
+            "id": "03030303030303030303030303030303",
+            "category": 2,
+            "price": "3000000",
+            "floor": "2750000"
+        },
+        {
+            "id": "04040404040404040404040404040404",
+            "category": 3,
+            "price": "12000000",
+            "floor": "12000000"
+        },
+        {
+            "id": "05050505050505050505050505050505",
+            "category": 2,
+            "price": "2750000",
+            "floor": "2750000"
+        }
+    ],
+    "leaves": [
+        "09c0786f01f229722befba512d40d544afb388bde9922b03591c86c1f4f2d3b7",
+        "4966854f1ac938aa2a5d6f676e190e679bbac857e642545d14c50f218ac4b224",
+        "699e25fe8e55f8877dafc7b4d528e33e9c68409c7faa0a7992974dcbe4881937",
+        "8fee9ddafbf170dd98a32b0322d2d9e0c44a26a2874a6f15cfe3af0b006f613e",
+        "6e6096a7c529af0d3de2679c9bb67849e6981fe813b44fc46ab6417b5831dc69"
+    ],
+    "root": "d74aacb91163b949a566800e80b691e6575eab13c6c00d65822a360927d4bd62",
+    "proofs": [
+        [
+            "4966854f1ac938aa2a5d6f676e190e679bbac857e642545d14c50f218ac4b224",
+            "13bc2f90481cd232216288f2ddcccb754eb841f53d3f6058c476e3dbfcc5b71c",
+            "6e6096a7c529af0d3de2679c9bb67849e6981fe813b44fc46ab6417b5831dc69"
+        ],
+        [
+            "09c0786f01f229722befba512d40d544afb388bde9922b03591c86c1f4f2d3b7",
+            "13bc2f90481cd232216288f2ddcccb754eb841f53d3f6058c476e3dbfcc5b71c",
+            "6e6096a7c529af0d3de2679c9bb67849e6981fe813b44fc46ab6417b5831dc69"
+        ],
+        [
+            "8fee9ddafbf170dd98a32b0322d2d9e0c44a26a2874a6f15cfe3af0b006f613e",
+            "a12165fddfff08b018b0d1d0de046a76c1b8bb78020944f3752d0bf09e5a6a84",
+            "6e6096a7c529af0d3de2679c9bb67849e6981fe813b44fc46ab6417b5831dc69"
+        ],
+        [
+            "699e25fe8e55f8877dafc7b4d528e33e9c68409c7faa0a7992974dcbe4881937",
+            "a12165fddfff08b018b0d1d0de046a76c1b8bb78020944f3752d0bf09e5a6a84",
+            "6e6096a7c529af0d3de2679c9bb67849e6981fe813b44fc46ab6417b5831dc69"
+        ],
+        [
+            "0be72534522583c5e89ded49e2aaca5978a2344d87efa4515d7425fb1e6dbb56"
+        ]
+    ],
+    "header": "54414c4c595f4e4541525f4d454e553129a16e2f7ad175fdaa1cded6cdcebe0d38ab7504e32a16a5fec67de60164c3136d46c2444bcc4c73e3fa7388ececea08b733338b03a77f7eec26dcf7dcb80283d74aacb91163b949a566800e80b691e6575eab13c6c00d65822a360927d4bd6200505c18a3010000e0e36018a301000007000000000000000500000000010000"
+}
