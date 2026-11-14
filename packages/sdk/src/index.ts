@@ -4,3 +4,4 @@ export * from './client.ts';
 export * from './guard.ts';
 export * from './intents.ts';
 export * from './relay.ts';
+export * from './portable.ts';
