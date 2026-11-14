@@ -82,6 +82,11 @@ export default function Welcome() {
             I already have Tally
           </Button>
         )}
+        {!asking && (
+          <button onClick={() => s.signInWallet()} disabled={working} className="w-full text-center text-[13px] text-brand-bright">
+            Have a NEAR wallet? Connect it instead
+          </button>
+        )}
         <p className="px-4 text-center text-[12px] leading-[17px] text-faint">
           Your passkey is your account: no seed phrase, no extension, no gas. Your agent only ever holds a capped key.
         </p>

@@ -159,11 +159,13 @@ function ScanInner() {
     setSt({ s: "paying", item, merchant: ctx.merchant, cosign: needsOwner });
     let fresh: Awaited<ReturnType<typeof passkeyConfirm>> | undefined;
     try {
-      if (needsOwner) {
+      if (needsOwner && !keys.owner.wallet) {
         fresh = await passkeyConfirm(); // Second Look: a fresh Face ID before your key signs
         if (fresh.owner.address !== keys.owner.address) throw new Error("other-passkey");
       }
-      const r = await pay(keys.agent, fresh ? fresh.owner : null, a.id, ctx.menu, item, { memo: pick?.reason, attestation: pick?.attestation ?? undefined });
+      // with a NEAR wallet, the wallet's own approval screen is the Second Look
+      const approver = needsOwner ? (keys.owner.wallet ? keys.owner : fresh!.owner) : null;
+      const r = await pay(keys.agent, approver, a.id, ctx.menu, item, { memo: pick?.reason, attestation: pick?.attestation ?? undefined });
       rememberReceipt({
         capsuleId: a.id,
         merchant: ctx.menu.header.merchant,

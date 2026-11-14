@@ -74,7 +74,7 @@ function SettingsInner() {
           <Mascot mood="avatar" height={48} glow={false} />
           <div className="min-w-0 flex-1">
             <p className="text-[17px] font-medium">{name ?? "Tally user"}</p>
-            <p className="text-[13px] text-faint">Passkey · {short(keys.owner.address)}</p>
+            <p className="text-[13px] text-faint">{keys.owner.wallet ? "NEAR wallet" : "Passkey"} · {short(keys.owner.address)}</p>
           </div>
           <Chip>testnet</Chip>
         </div>
