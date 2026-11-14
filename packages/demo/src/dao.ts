@@ -25,7 +25,7 @@ async function tx(who: string, contractId: string, methodName: string, args: Rec
   return { hash: r.transaction.hash, value: r.status.SuccessValue ? JSON.parse(Buffer.from(r.status.SuccessValue, 'base64').toString() || 'null') : null };
 }
 
-const view = (contractId: string, method: string, args: object = {}) => client.provider.callFunction({ contractId, method, args }) as Promise<any>;
+const view = (contractId: string, method: string, args: Record<string, unknown> = {}) => client.provider.callFunction({ contractId, method, args }) as Promise<any>;
 
 async function main() {
   const council = [ids.arbiter, ids.owner2];
