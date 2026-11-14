@@ -10,7 +10,7 @@ import { Mascot } from "@/components/Mascot";
 import { RequireSession } from "@/components/RequireSession";
 import { Button, Card, Chip, Header, Label, Mono, Spinner, Tile, usd } from "@/components/ui";
 import { rememberBlocked, rememberReceipt } from "@/lib/activity";
-import { EXPLORER } from "@/lib/chain";
+import { EXPLORER, client } from "@/lib/chain";
 import { humanError } from "@/lib/errors";
 import { agentPayload, type Pick } from "@/lib/firewall";
 import { staleRecovery, type MenuSource } from "@/lib/flow";
@@ -18,13 +18,14 @@ import { signIn as passkeyConfirm } from "@/lib/passkey";
 import { decodeQr, type Item, type SignedMenu } from "@/lib/menu";
 import { alreadyPaid, pay, preflight, type Preflight } from "@/lib/pay";
 import { useSession } from "@/lib/session";
-import { chainNow, readMerchant, setFrozen, type Merchant } from "@/lib/tally";
+import type { Verdict } from "@tally-near/sdk";
+import { chainNow, nearAmount, readMerchant, setFrozen, type Merchant } from "@/lib/tally";
 import { useAllowance } from "@/lib/useAllowance";
 import { signedBy } from "@/lib/verify";
 
 const Scanner = dynamic(() => import("@yudiel/react-qr-scanner").then((m) => m.Scanner), { ssr: false });
 
-type Ctx = { menu: SignedMenu; merchant: Merchant; source: MenuSource };
+type Ctx = { menu: SignedMenu; merchant: Merchant; source: MenuSource; guard: Verdict };
 type Stage =
   | { s: "scan" }
   | { s: "loading" }
@@ -63,13 +64,18 @@ function SignedMenuList({ ctx, onPick }: { ctx: Ctx; onPick?: (i: Item) => void 
   );
 }
 
-function CounterChips({ m, live }: { m: Merchant; live: boolean }) {
+function CounterChips({ m, live, guard }: { m: Merchant; live: boolean; guard?: Verdict }) {
   return (
     <div className="flex flex-wrap gap-2">
       <Chip color="var(--paid)" icon={<BadgeCheck size={14} />}>
-        {usd(m.bond)} bonded
+        {nearAmount(m.bond)} bonded
       </Chip>
       <Chip icon={<Radio size={14} />}>{live ? "Live menu" : "Printed menu"}</Chip>
+      {guard && (
+        <Chip color={guard.level === "allow" ? "var(--paid)" : "var(--needs)"} icon={<ShieldCheck size={14} />}>
+          {guard.level === "allow" ? "Guard: no red flags" : "Guard: needs your OK"}
+        </Chip>
+      )}
     </div>
   );
 }
@@ -90,10 +96,13 @@ function ScanInner() {
       const merchant = await readMerchant(menu.header.merchant);
       if (!merchant || !merchant.active) throw new Error("This counter isn't registered with Tally.");
       if (!(await signedBy(menu, merchant.signingKey))) throw new Error("This menu wasn't signed by the counter. Don't pay it.");
-      setSt({ s: "menu", menu, merchant, source });
+      // the same counterparty verdict the contract applies inside pay
+      const guard = await client.assess(menu.header.merchant, a.id);
+      if (guard.level === "block") throw new Error(`Tally's Guard blocked this counter: ${guard.reasons[0]}`);
+      setSt({ s: "menu", menu, merchant, source, guard });
     } catch (e) {
       const m = (e as Error).message;
-      setErr(m.includes("Tally") || m.includes("counter") ? m : "That's not a Tally menu.");
+      setErr(m.includes("Tally") || m.includes("counter") || m.includes("Guard") ? m : "That's not a Tally menu.");
       setSt({ s: "scan" });
     }
   };
@@ -113,6 +122,9 @@ function ScanInner() {
     let check = preflight(a.capsule, ctx.merchant.bond, ctx.menu, item, await chainNow());
     if (check.ok && (await alreadyPaid(a.id, ctx.menu, item).catch(() => false))) {
       check = { ok: false, code: "paid", message: "Already paid. You won't be charged twice." };
+    }
+    if (check.ok && ctx.guard.level === "warn") {
+      check = { ok: true, needsOwner: true, reasons: [...check.reasons, ...ctx.guard.reasons.map((x) => `Guard: ${x}.`)] };
     }
     if (!check.ok && a.id !== undefined && check.code !== "stale") {
       rememberBlocked(a.id, { title: item.name, reason: check.message, price: item.price, timestamp: Math.floor(Date.now() / 1000) });
@@ -298,13 +310,13 @@ function ScanInner() {
   }
 
   // menu / thinking / checkout share the counter header
-  const ctx: Ctx = { menu: st.menu, merchant: st.merchant, source: st.source };
+  const ctx: Ctx = { menu: st.menu, merchant: st.merchant, source: st.source, guard: st.guard };
   const live = st.menu.header.expiresAt - st.menu.header.issuedAt <= 60n;
 
   return (
     <div className="flex flex-1 flex-col gap-4 pb-28">
       <Header title={st.merchant.name} back="/home" />
-      <CounterChips m={st.merchant} live={live} />
+      <CounterChips m={st.merchant} live={live} guard={st.guard} />
       {errBox}
 
       {st.s === "checkout" ? (
