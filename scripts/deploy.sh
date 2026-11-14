@@ -32,4 +32,8 @@ fi
 # The contract must hold a token account to receive capsule funding.
 call "$CONTRACT" "$TOKEN" mint '{"amount":"0"}'
 echo
-echo "Deployed Tally at $CONTRACT (token $TOKEN). Next: pnpm --filter @tally-near/demo seed"
+echo "Deployed Tally at $CONTRACT (token $TOKEN). Next: PREFIX=$PREFIX pnpm --filter @tally-near/demo seed"
+echo
+echo "For the app, set web/lib/deployments.json to:"
+echo "  {\"network\":\"testnet\",\"tally\":\"$CONTRACT\",\"token\":\"$TOKEN\",\"demoMerchant\":\"$MERCHANT\",\"sponsor\":\"<a funded account>\"}"
+echo "and in web/.env.local: DEMO_MERCHANT_SIGNER_KEY=<cafeMenu from ~/.tally/$PREFIX/keys.json>, SPONSOR_ACCOUNT, SPONSOR_KEY"
