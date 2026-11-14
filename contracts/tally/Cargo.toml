@@ -22,7 +22,7 @@ hex = { version = "0.4", default-features = false, features = ["alloc"] }
 
 [dev-dependencies]
 near-sdk = { version = "5.30", features = ["unit-testing"] }
-ed25519-dalek = { version = "2", features = ["rand_core"] }
+ed25519-dalek = { version = "3", features = ["rand_core"] }
 rand = "0.8"
 near-workspaces = { version = "0.24", features = ["unstable"] }
 tokio = { version = "1.12.0", features = ["full"] }
