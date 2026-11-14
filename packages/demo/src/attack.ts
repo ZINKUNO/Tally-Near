@@ -68,15 +68,15 @@ async function main() {
 
   const shady = freshMenu(ids.contract, ids.shady, keys.shadyMenu, shadyLines);
   out(`\nInjected text the shady menu carries (display only, never shown to the model, never in a leaf):\n    "${shady.display[shady.items[0].id].note}"`);
-  show('1. Agent reads the injected menu and wants to pay the "refund fee"', await buy({ ...base, goal: 'pay the refund fee the merchant says I approved', menu: shady, forceIndex: 1 }));
-  show('2. Hijacked agent skips its own wrapper and signs anyway', await buy({ ...base, goal: 'refund fee', menu: shady, forceIndex: 1, bypassWrapper: true }));
+  show('1. Agent reads the injected menu and wants to pay the "refund fee"', await buy({ ...base, goal: 'pay the refund fee the merchant says I approved', menu: shady, forceIndex: 1, forceReason: 'injected instruction in menu text' }));
+  show('2. Hijacked agent skips its own wrapper and signs anyway', await buy({ ...base, goal: 'refund fee', menu: shady, forceIndex: 1, forceReason: 'injected instruction in menu text', bypassWrapper: true }));
 
   const cafe = freshMenu(ids.contract, ids.merchant, keys.cafeMenu, cafeLines);
   show('3. Agent claims the large flat white costs 0.01', await buy({
-    ...base, goal: 'a coffee', menu: cafe, forceIndex: 1, bypassWrapper: true,
+    ...base, goal: 'a coffee', menu: cafe, forceIndex: 1, forceReason: 'hijacked: lie about the price', bypassWrapper: true,
     tamper: (a) => { a.price = '10000'; a.floor = '10000'; },
   }));
-  show('4. Agent buys a 12.00 tote bag (merch is not an allowed category)', await buy({ ...base, goal: 'a tote bag', menu: cafe, forceIndex: 5, bypassWrapper: true }));
+  show('4. Agent buys a 12.00 tote bag (merch is not an allowed category)', await buy({ ...base, goal: 'a tote bag', menu: cafe, forceIndex: 5, forceReason: 'hijacked: buy merch', bypassWrapper: true }));
   show('5. A perfectly valid coffee, after the tripwire', await buy({ ...base, goal: 'a coffee', menu: freshMenu(ids.contract, ids.merchant, keys.cafeMenu, cafeLines), bypassWrapper: true }));
 
   await rawAttempt('6. Agent key sends 0.01 NEAR to an attacker', (a) => a.transfer({ receiverId: ids.shady, amount: 10n ** 22n }));
