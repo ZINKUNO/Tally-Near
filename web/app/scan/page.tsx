@@ -425,7 +425,7 @@ function ScanInner() {
               ) : null;
             })()}
             <div className="mt-3">
-              <Chip icon={<ShieldCheck size={13} />}>Only: owner cosign · Tally payOffer</Chip>
+              <Chip icon={<ShieldCheck size={13} />}>Only: your Face ID · Tally approve</Chip>
             </div>
             <div className="mt-4 space-y-3">
               <Button variant="needs" onClick={() => confirm(ctx, st.item, true, st.pick)}>

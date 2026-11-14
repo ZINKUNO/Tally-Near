@@ -104,7 +104,7 @@ function RedTeamInner() {
               {blocked ? <ShieldCheck size={22} style={{ color }} /> : <ShieldX size={22} className="text-blocked" />}
             </div>
             <p className="mt-3 text-[14px]">
-              {blocked ? "Reverted on-chain: " : "Not blocked: "}
+              {blocked ? "Refused by the Tally contract: " : "Not blocked: "}
               {SENTENCES[got] ?? got}
             </p>
             <Mono className="mt-1">
