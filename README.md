@@ -9,7 +9,7 @@ An AI agent may pay only for an item a merchant signed, at the signed price, to 
 merchant, inside your rules. A NEAR contract checks every payment; the agent's key can't do anything else.
 
 [Contract `tallynear.testnet`](https://testnet.nearblocks.io/address/tallynear.testnet) ·
-[Attack log](docs/attack-log.md) · [Happy-path log](docs/demo-log.md) · [Architecture](docs/architecture.md) · [Verify every claim](VERIFY.md)
+[Attack log](docs/attack-log.md) · [Happy-path log](docs/demo-log.md) · [Architecture](docs/architecture.md) · [Threat model](docs/threat-model.md) · [Verify every claim](VERIFY.md)
 
 Built at **NEAR HACKATHON** (Nov 2026) · Tracks: `security`, `agents`, `realworld` · MIT
 
