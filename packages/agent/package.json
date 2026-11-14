@@ -13,7 +13,8 @@
     "test": "node --test --experimental-strip-types test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "mcp:smoke": "node --experimental-strip-types src/mcp-smoke.ts",
-    "verify-tee": "node --experimental-strip-types src/verify-tee.ts"
+    "verify-tee": "node --experimental-strip-types src/verify-tee.ts",
+    "market": "node --experimental-strip-types src/market.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
