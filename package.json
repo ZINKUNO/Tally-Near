@@ -13,5 +13,10 @@
     "build": "pnpm --filter @tally-near/web build",
     "dev": "pnpm --filter @tally-near/web dev",
     "typecheck": "pnpm -r typecheck"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": ">=8.5.23"
+    }
   }
 }
