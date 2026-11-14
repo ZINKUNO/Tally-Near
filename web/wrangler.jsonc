@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tally-near",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-08-25",
+  // near-api-js and node:crypto in the API routes need Node compatibility
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "observability": { "enabled": true }
+  // Secrets (set with `wrangler secret put`): DEMO_MERCHANT_SIGNER_KEY, SPONSOR_ACCOUNT, SPONSOR_KEY,
+  // optional NEAR_AI_API_KEY, ONECLICK_JWT. See .env.example.
+}
