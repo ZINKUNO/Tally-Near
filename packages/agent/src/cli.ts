@@ -19,7 +19,7 @@ if (!cfg.agentKey) throw new Error('set TALLY_AGENT_KEY (the function-call key) 
 
 const menu = existsSync(menuArg) ? readFileSync(menuArg, 'utf8') : menuArg;
 const res = await buy({
-  goal, menu, client: cfg.client, ownerId: cfg.ownerId, agentKey: cfg.agentKey, minAccountAgeMs: cfg.minAccountAgeMs,
+  goal, menu, client: cfg.client, ownerId: cfg.ownerId, agentKey: cfg.agentKey, minAccountAgeMs: cfg.minAccountAgeMs, relayUrl: cfg.relayUrl,
   askHuman: async (q) => {
     if (yes) return true;
     const rl = createInterface({ input: process.stdin, output: process.stdout });

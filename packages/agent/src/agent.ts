@@ -47,6 +47,8 @@ export type BuyOptions = {
   bypassWrapper?: boolean;
   nearblocks?: string | null;
   minAccountAgeMs?: number;
+  /** Pay gaslessly through this NEP-366 relayer URL instead of spending the key's gas allowance. */
+  relayUrl?: string;
 };
 
 export async function buy(o: BuyOptions): Promise<BuyResult> {
@@ -97,7 +99,8 @@ export async function buy(o: BuyOptions): Promise<BuyResult> {
   if (preview.outcome === 'rejected' && !o.bypassWrapper) return { status: 'rejected', steps, item };
 
   const wallet = new AgentWallet(o.client, o.ownerId, o.agentKey);
-  const { outcome, hash } = await wallet.pay(args);
+  const { outcome, hash } = o.relayUrl ? await wallet.payGasless(args, o.relayUrl) : await wallet.pay(args);
+  if (o.relayUrl) add('relay', true, `gas paid by the relayer (NEP-366 meta transaction)`);
   const detail = outcome.status === 'paid' ? `receipt #${outcome.receipt_id}`
     : outcome.status === 'second_look' ? `parked for the owner (pending #${outcome.pending_id}): ${outcome.reasons.join('; ')}`
     : `${outcome.code}: ${outcome.reason}${outcome.frozen ? ' — capsule FROZEN by tripwire' : ''}`;

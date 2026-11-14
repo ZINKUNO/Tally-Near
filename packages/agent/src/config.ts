@@ -22,5 +22,6 @@ export function agentConfig() {
   if (!agentKey && existsSync(file)) agentKey = JSON.parse(readFileSync(file, 'utf8')).agent;
   const menuBase = process.env.TALLY_MENU_BASE ?? 'http://localhost:8787';
   const minAccountAgeMs = Number(process.env.TALLY_MIN_ACCOUNT_AGE_MS ?? 86_400_000);
-  return { contractId, ownerId, agentKey, menuBase, minAccountAgeMs, client: new TallyClient(contractId, process.env.NEAR_RPC ?? RPC.testnet) };
+  const relayUrl = process.env.TALLY_RELAY_URL; // e.g. https://tally-near.adoranto737.workers.dev/api/relay
+  return { contractId, ownerId, agentKey, menuBase, minAccountAgeMs, relayUrl, client: new TallyClient(contractId, process.env.NEAR_RPC ?? RPC.testnet) };
 }

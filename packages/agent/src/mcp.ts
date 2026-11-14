@@ -85,7 +85,7 @@ server.registerTool(
   async ({ goal, menu_url, item_index }) => {
     if (!cfg.agentKey) return text('TALLY_AGENT_KEY is not set');
     const r = await buy({
-      goal, menu: menu_url, client: cfg.client, ownerId: cfg.ownerId, agentKey: cfg.agentKey, minAccountAgeMs: cfg.minAccountAgeMs,
+      goal, menu: menu_url, client: cfg.client, ownerId: cfg.ownerId, agentKey: cfg.agentKey, minAccountAgeMs: cfg.minAccountAgeMs, relayUrl: cfg.relayUrl,
       forceIndex: item_index, forceReason: item_index === undefined ? undefined : 'chosen by the calling model',
     });
     return text({ status: r.status, item: r.item && { ...r.item, price: fromUnits(r.item.price) }, tx: r.txHash && explorerTx(r.txHash), steps: r.steps });
