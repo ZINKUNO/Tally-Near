@@ -32,10 +32,10 @@ flowchart LR
     IN[/intents, quote: 1Click/]
   end
   subgraph NEAR["NEAR testnet"]
-    T[(tallynear.testnet\nTally contract)]
-    U[(tallynear-usdc.testnet\nNEP-141)]
-    D[(tally-arbiter.sputnikv2.testnet\nSputnik DAO)]
-    M[(v1.signer-prod.testnet\nChain Signatures MPC)]
+    T[(tallynear.testnet<br/>Tally contract)]
+    U[(tallynear-usdc.testnet<br/>NEP-141)]
+    D[(tally-arbiter.sputnikv2.testnet<br/>Sputnik DAO)]
+    M[(v1.signer-prod.testnet<br/>Chain Signatures MPC)]
   end
   Counter[Café counter QR] -->|signed menu| Phone
   K2 -->|delegate action| RL -->|meta tx| T
