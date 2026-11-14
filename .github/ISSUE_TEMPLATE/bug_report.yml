@@ -1,0 +1,20 @@
+name: Bug report
+description: Something doesn't work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened, description: Include the transaction hash or receipt id if one is involved. }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: What you expected }
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes: { label: How to reproduce, description: Commands, account ids (testnet), app screen. }
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [contract, app, agent / MCP, SDK, docs]
