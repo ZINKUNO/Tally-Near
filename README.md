@@ -1,5 +1,5 @@
 <div align="center">
-<img src="docs/brand/mark.svg" width="88" alt="Tally" />
+<img src="docs/brand/logo.png" width="120" alt="Tally" />
 
 # Tally
 
