@@ -18,9 +18,10 @@ it("the owner is a NEAR implicit account named by its public key", () => {
   expect(Buffer.from(pub).toString("hex")).toBe(k.owner.accountId);
 });
 
-it("the sponsor funds new implicit accounts once and refuses named or malformed ids", () => {
+it("the sponsor funds new implicit accounts once, gives wallet accounts test USD only, refuses malformed ids", () => {
   const id = deriveKeys(new Uint8Array(32).fill(4)).owner.accountId;
   expect(welcomePlan({ owner: id, ownerNear: 0n, ownerUsd: 0n }).usd).toBe(50_000_000n);
   expect(welcomePlan({ owner: id, ownerNear: 10n ** 24n, ownerUsd: 1n })).toEqual({ near: 0n, usd: 0n });
-  expect(() => welcomePlan({ owner: "alice.testnet", ownerNear: 0n, ownerUsd: 0n })).toThrow();
+  expect(welcomePlan({ owner: "alice.testnet", ownerNear: 0n, ownerUsd: 0n })).toEqual({ near: 0n, usd: 50_000_000n }); // wallet users: test USD only
+  expect(() => welcomePlan({ owner: "not an account!", ownerNear: 0n, ownerUsd: 0n })).toThrow();
 });

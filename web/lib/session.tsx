@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { friendlyPasskeyError, hasSavedPasskey, signIn as passkeySignIn, signUp as passkeySignUp, type Keys } from "./passkey";
+import { connectWallet, disconnectWallet, restoreWallet } from "./wallet";
 
 type Status = "signed-out" | "working" | "signed-in";
 
@@ -13,6 +14,8 @@ type Session = {
   returning: boolean;
   signUp: (name: string) => Promise<boolean>;
   signIn: () => Promise<boolean>;
+  /** Sign in with an existing NEAR wallet instead of a passkey. */
+  signInWallet: () => Promise<boolean>;
   signOut: () => void;
   retryWelcome: () => void;
 };
@@ -39,6 +42,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => setReturning(hasSavedPasskey()), []);
 
+  // a NEAR wallet session survives reloads (the passkey one re-asks for Face ID by design)
+  useEffect(() => {
+    restoreWallet()
+      .then((k) => {
+        if (k) {
+          setKeys(k);
+          setStatus("signed-in");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const run = useCallback(async (fn: () => Promise<Keys>) => {
     setStatus("working");
     setError(undefined);
@@ -50,7 +65,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       welcome(k).then(setWelcomeUsd, (e) => setError(e.message));
       return true;
     } catch (e) {
-      setError(friendlyPasskeyError(e));
+      setError((e as Error)?.message?.startsWith("wallet:") ? (e as Error).message.slice(7) : friendlyPasskeyError(e));
       setStatus("signed-out");
       return false;
     }
@@ -58,6 +73,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(() => {
     keys?.end();
+    if (keys?.owner.wallet) disconnectWallet();
     setKeys(undefined);
     setStatus("signed-out");
   }, [keys]);
@@ -72,6 +88,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         returning,
         signUp: (name) => run(() => passkeySignUp(name)),
         signIn: () => run(passkeySignIn),
+        signInWallet: () =>
+          run(() =>
+            connectWallet().catch((e) => {
+              throw new Error(`wallet:${(e as Error)?.message || "Wallet sign-in was cancelled."}`);
+            }),
+          ),
         signOut,
         retryWelcome: () => {
           if (!keys) return;
