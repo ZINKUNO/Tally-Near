@@ -31,7 +31,7 @@ type Stage =
   | { s: "loading" }
   | ({ s: "menu" } & Ctx)
   | ({ s: "thinking"; request: string } & Ctx)
-  | ({ s: "checkout"; item: Item; pick: Pick & { by: string }; check: Preflight; sheet: boolean } & Ctx)
+  | ({ s: "checkout"; item: Item; pick: Pick & { by: string; attestation?: string | null }; check: Preflight; sheet: boolean } & Ctx)
   | { s: "paying"; item: Item; merchant: Merchant; cosign: boolean }
   | ({ s: "paid"; item: Item; hash: string; ms: number; cosigned: boolean } & Ctx);
 
@@ -153,7 +153,7 @@ function ScanInner() {
     }
   };
 
-  const confirm = async (ctx: Ctx, item: Item, needsOwner: boolean) => {
+  const confirm = async (ctx: Ctx, item: Item, needsOwner: boolean, pick?: { reason: string; attestation?: string | null }) => {
     if (!keys || a.id === undefined) return;
     setErr(undefined);
     setSt({ s: "paying", item, merchant: ctx.merchant, cosign: needsOwner });
@@ -163,7 +163,7 @@ function ScanInner() {
         fresh = await passkeyConfirm(); // Second Look: a fresh Face ID before your key signs
         if (fresh.owner.address !== keys.owner.address) throw new Error("other-passkey");
       }
-      const r = await pay(keys.agent, fresh ? fresh.owner : null, a.id, ctx.menu, item);
+      const r = await pay(keys.agent, fresh ? fresh.owner : null, a.id, ctx.menu, item, { memo: pick?.reason, attestation: pick?.attestation ?? undefined });
       rememberReceipt({
         capsuleId: a.id,
         merchant: ctx.menu.header.merchant,
@@ -173,6 +173,7 @@ function ScanInner() {
         cosigned: needsOwner,
         receipt: r.receipt,
         txHash: r.hash,
+        attestation: pick?.attestation ?? null,
         timestamp: Math.floor(Date.now() / 1000),
         name: item.name,
         merchantName: ctx.merchant.name,
@@ -339,7 +340,7 @@ function ScanInner() {
           {!st.check.ok && <p className="mt-3 rounded-2xl bg-blocked/10 p-3 text-[14px] text-blocked">{st.check.message}</p>}
           <div className="mt-4">
             {st.check.ok ? (
-              <Button onClick={() => (st.check.ok && st.check.needsOwner ? setSt({ ...st, sheet: true }) : confirm(ctx, st.item, false))}>
+              <Button onClick={() => (st.check.ok && st.check.needsOwner ? setSt({ ...st, sheet: true }) : confirm(ctx, st.item, false, st.pick))}>
                 <Zap size={17} /> Pay {usd(st.item.price)}
               </Button>
             ) : st.check.code === "stale" ? (
@@ -427,7 +428,7 @@ function ScanInner() {
               <Chip icon={<ShieldCheck size={13} />}>Only: owner cosign · Tally payOffer</Chip>
             </div>
             <div className="mt-4 space-y-3">
-              <Button variant="needs" onClick={() => confirm(ctx, st.item, true)}>
+              <Button variant="needs" onClick={() => confirm(ctx, st.item, true, st.pick)}>
                 <Fingerprint size={18} /> Approve with Face ID
               </Button>
               <Button variant="ghost" onClick={() => setSt({ ...st, sheet: false })}>
