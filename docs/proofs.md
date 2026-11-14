@@ -80,3 +80,34 @@ git checkout 3ef9d9353afef1bea90f122ba0560851ac465a2a
 cd contracts/tally && cargo near build reproducible-wasm     # prints the SHA-256 bs58 above
 near contract call-function as-read-only tallynear.testnet contract_source_metadata json-args '{}' network-config testnet now
 ```
+
+## 7. NEAR Intents: real cross-chain top-ups
+
+The family top-up page (`/send/<account>`) gets a live 1Click **deposit address** (non-dry quote): whoever sends
+that much USDC on Base, Arbitrum, Ethereum or Polygon gets NEAR USDC delivered to the allowance owner's account id
+on NEAR mainnet (a passkey's implicit account is the same id on both networks). The page shows a QR code and polls
+the swap status. Tally never holds the funds.
+
+| Check | Evidence |
+| --- | --- |
+| Live deposit address from the deployed app | `curl -X POST https://tally-near.adoranto737.workers.dev/api/intents -d '{"from":"base","usd":1,"recipient":"<64-hex>","refundTo":"0x…"}'` → `{"depositAddress":"0xB684012b…","amountOut":"995759","timeEstimate":35}` |
+| Testnet recipients refused (they'd lose funds) | `{"error":"recipient must be a NEAR mainnet account…"}`; `packages/sdk/test/intents.test.ts` |
+| Swap status | `GET /api/intents?depositAddress=…` (1Click `/v0/status`) |
+
+Intents run on mainnet only, so an end-to-end swap needs a real deposit (from $1). A completed swap's
+status and NEAR transaction will be added here.
+
+## 8. NEAR wallet sign-in (HOT near-connect)
+
+Besides the passkey, the landing page offers **"Have a NEAR wallet? Connect it instead"**: Meteor, Intear, Ledger,
+Nightly, Ethereum wallets (via NEAR), NEAR CLI. The wallet's account becomes the owner and signs every owner action
+(open allowance, add the agent's pay-only key, approve a Second Look, freeze, revoke); the browser only keeps the
+agent's pay-only key, which pays gaslessly through the relayer. Wallet accounts get $50 of test USD from the sponsor.
+
+| Check | Evidence |
+| --- | --- |
+| Wallet picker on the live app | screenshot below; https://tally-near.adoranto737.workers.dev → "Have a NEAR wallet?" |
+| Owner calls, `AddKey`/`DeleteKey` go to the wallet with the exact actions | `web/test/wallet.test.ts` |
+| Named accounts get test USD only, no NEAR | `web/test/passkey.test.ts` |
+
+![Wallet picker](images/wallet-picker.png)
