@@ -32,6 +32,9 @@ importers:
 
   packages/demo:
     dependencies:
+      '@tally-near/agent':
+        specifier: workspace:*
+        version: link:../agent
       '@tally-near/sdk':
         specifier: workspace:*
         version: link:../sdk

@@ -3,11 +3,15 @@
  * keychain (~/.near-credentials), and demo-only keys (merchant menu keys, the agent's
  * function-call key) in ~/.tally/<prefix>/keys.json. Nothing secret is ever written to the repo.
  */
+import { setDefaultAutoSelectFamilyAttemptTimeout } from 'node:net';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { Account, KeyPair, KeyPairSigner, type KeyPairString } from 'near-api-js';
 import { TallyClient, RPC } from '@tally-near/sdk';
+
+// Node gives each address family 250 ms by default, too short for slow links to some RPCs.
+setDefaultAutoSelectFamilyAttemptTimeout(3000);
 
 export const PREFIX = process.env.PREFIX ?? 'tallynear';
 export const NETWORK = 'testnet' as const;
