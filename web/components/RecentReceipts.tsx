@@ -76,10 +76,10 @@ export function RecentReceipts({ capsuleId, limit, owner, refreshKey }: { capsul
       </div>
       <ul className="divide-y divide-white/5">
         {tops.map((t) => (
-          <TopupRow key={t.txHash} t={t} />
+          <TopupRow key={`${t.from}:${t.timestamp}`} t={t} />
         ))}
         {rows.map((r) => (
-          <ReceiptRow key={r.txHash} r={r} />
+          <ReceiptRow key={r.receipt} r={r} />
         ))}
       </ul>
     </section>
