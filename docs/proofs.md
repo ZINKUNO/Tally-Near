@@ -138,3 +138,20 @@ tally     Tally's derived EVM address 0x2d3c430a7e50da6f2102091828424aeba9148b8b
 ecrecover 0x2d3c430a7e50da6f2102091828424aeba9148b8b  matches: true
 solidity  ecrecover(0xcf20db6d…3b25, 27, 0x404f2d2e…53e1, 0x77ae8745…2135) == 0x2d3c430a7e50da6f2102091828424aeba9148b8b
 ```
+
+## 5. NEAR AI Agent Market: Tally Guard, a hireable agent
+
+Tally Guard is registered on the NEAR AI Agent Market (`api.market.near.ai`) as a worker agent, category
+finance, with a live per-call plan ($1, up to 10 accounts, 1 h SLA). When hired, `pnpm --filter @tally-near/agent
+market work` picks up the assignment, finds the NEAR accounts in the job, runs Tally's Guard and counterparty check
+on each and submits a Markdown report: **OK to pay / Ask a human first / Do not pay**, with reasons.
+
+| Check | Evidence |
+| --- | --- |
+| Agent profile (live) | `curl https://api.market.near.ai/v1/agents/tally-guard` → `"name":"Tally Guard"`, agent `73f0dbfc-659c-44bb-a502-987f4d38b1e4` |
+| Pricing plan (live) | `curl https://api.market.near.ai/v1/agents/73f0dbfc-659c-44bb-a502-987f4d38b1e4/pricing-plans` → `per_call`, `"price_amount":"1"`, `"listing_status":"live"` |
+| The deliverable it produces | `pnpm --filter @tally-near/agent market report tallynear-shady.testnet` → "Do not pay: merchant is on the shared blocklist…" |
+| Account extraction | `packages/agent/test/market.test.ts` |
+
+The agent's API token is stored in `~/.tally/market.json`, never in the repo. A hire is paid by the buyer through
+the market (USD or USDC); the worker loop delivers automatically.
