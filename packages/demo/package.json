@@ -12,7 +12,8 @@
     "attack": "node --experimental-strip-types src/attack.ts",
     "status": "node --experimental-strip-types src/status.ts",
     "typecheck": "tsc --noEmit",
-    "dao": "node --experimental-strip-types src/dao.ts"
+    "dao": "node --experimental-strip-types src/dao.ts",
+    "portable": "node --experimental-strip-types src/portable.ts"
   },
   "dependencies": {
     "@tally-near/agent": "workspace:*",
