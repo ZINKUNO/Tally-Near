@@ -115,3 +115,16 @@ export function blockedAttempts(id: string): Blocked[] {
     return [];
   }
 }
+
+/**
+ * Rejected agent attempts the contract itself recorded (the tripwire's evidence). They show up on
+ * every device, not only the one that ran the red team.
+ */
+export function onchainBlocked(attempts: { at_ms: number; merchant_id: string; price: string; code: string; reason: string }[], sentences: Record<string, string>): Blocked[] {
+  return attempts.map((a) => ({
+    title: `Your agent tried to pay ${a.merchant_id.length > 24 ? `${a.merchant_id.slice(0, 10)}…` : a.merchant_id}`,
+    reason: sentences[a.code] ?? a.reason,
+    price: BigInt(a.price),
+    timestamp: Math.floor(a.at_ms / 1000),
+  }));
+}

@@ -8,8 +8,9 @@ import { Mascot } from "@/components/Mascot";
 import { ReceiptRow, TopupRow } from "@/components/RecentReceipts";
 import { RequireSession } from "@/components/RequireSession";
 import { Card, Chip, Label, Spinner, Tile, usd } from "@/components/ui";
-import { blockedAttempts, getReceipts, getTopups, indexerOn, type Blocked, type Receipt, type Topup } from "@/lib/activity";
+import { blockedAttempts, getReceipts, onchainBlocked, getTopups, indexerOn, type Blocked, type Receipt, type Topup } from "@/lib/activity";
 import { EXPLORER, txUrl } from "@/lib/chain";
+import { SENTENCES } from "@/lib/errors";
 import { CATEGORY_LABEL } from "@/lib/tally";
 import { useAllowance } from "@/lib/useAllowance";
 
@@ -57,8 +58,8 @@ function ReceiptsInner() {
     if (a.id === undefined) return;
     getReceipts(a.id, 100).then(setPaid);
     getTopups(a.id, a.capsule?.owner).then(setTops);
-    setBlocked(blockedAttempts(a.id));
-  }, [a.id]);
+    setBlocked([...blockedAttempts(a.id), ...onchainBlocked(a.capsule?.attempts ?? [], SENTENCES)]);
+  }, [a.id, a.capsule?.attempts.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const timeline: Row[] = useMemo(
     () =>

@@ -66,3 +66,13 @@ describe("family top-ups", () => {
     expect(familyOnly(rows, "Alice.testnet").map((t) => t.note)).toEqual(["For lunches"]);
   });
 });
+
+describe("on-chain attempts", () => {
+  it("turns the contract's recorded rejections into blocked rows in plain words", async () => {
+    const { onchainBlocked } = await import("../lib/activity");
+    const { SENTENCES } = await import("../lib/errors");
+    const rows = onchainBlocked([{ at_ms: 2_000, merchant_id: "tallynear-shady.testnet", price: "9990000", code: "guard_block", reason: "x" }], SENTENCES);
+    expect(rows[0]).toMatchObject({ price: 9_990_000n, timestamp: 2 });
+    expect(rows[0].reason).toMatch(/Guard blocked/);
+  });
+});
