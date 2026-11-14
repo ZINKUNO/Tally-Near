@@ -35,3 +35,25 @@ a Sputnik DAO whose council votes on disputes. No single key can slash a merchan
 
 Check: `near contract call-function as-read-only tallynear.testnet get_dispute json-args '{"receipt_id":23}' network-config testnet now` → `"status": "upheld"`.
 Reproduce: `pnpm --filter @tally-near/demo dao`.
+
+## 3. NEAR AI Cloud TEE, verified (Intel TDX)
+
+Before each purchase the agent fetches the NEAR AI Cloud gateway's Intel TDX quote bound to a fresh
+32-byte nonce and verifies it the same way as [nearai-cloud-verifier](https://github.com/nearai/nearai-cloud-verifier):
+Intel DCAP collateral check, then `report_data[0..32]` = gateway signing key and `report_data[32..64]` = our nonce,
+read from the verified quote. Verified purchases carry `nearai-tdx:<status>:<quote>:<nonce>` in the on-chain receipt.
+
+```text
+$ pnpm --filter @tally-near/agent verify-tee
+nonce            0eb8857ff72f3f16393a02b945c10b36011b170a4e83d1cb06d3d5362d6d1364
+signing address  40599fb284f43953bb356b09080fd803c960fc10285ad90eca462ca711ad4acb
+quote sha256     6375bb4aeeb793bd4d6c99fe05284f57e6b433a4689c1fdf861c4fac5f6a7d1e
+Intel DCAP       UpToDate
+binds address    true
+binds our nonce  true
+VERIFIED         true   receipt label: nearai-tdx:UpToDate:6375bb4aeeb793bd:0eb8857ff72f3f16
+```
+
+Also: MCP tool `tally_verify_tee`; tests `a verified quote must bind the signing address and our nonce`.
+Scope: the app on Cloudflare records the nonce-bound quote digest (`nearai-gw:`); the full DCAP check runs in the agent
+(Node), because the verifier's WebAssembly build loads from disk.
