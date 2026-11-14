@@ -19,6 +19,9 @@ mod pay;
 mod token;
 mod views;
 
+#[cfg(test)]
+mod tests;
+
 
 pub use types::*;
 
