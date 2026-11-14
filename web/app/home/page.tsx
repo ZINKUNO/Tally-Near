@@ -133,7 +133,11 @@ function HomeInner() {
       <div className="mt-3">
         <h1 className="statement text-[40px] leading-[44px]">{greeting()}</h1>
         <p className="statement text-[24px] leading-[30px] text-muted">
-          {c.frozen ? "Your allowance is paused." : `Your agent can spend ${usd(canSpend)} more today.`}
+          {c.frozen
+            ? c.frozenReason?.startsWith("tripwire")
+              ? "Tally froze your agent: it kept trying payments the contract refused. See Receipts, then resume."
+              : "Your allowance is paused."
+            : `Your agent can spend ${usd(canSpend)} more today.`}
         </p>
       </div>
 
