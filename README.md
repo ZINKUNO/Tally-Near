@@ -60,7 +60,7 @@ near contract call-function as-read-only tallynear.testnet get_receipts \
 ```bash
 ./scripts/verify.sh
 ```
-→ 38 contract unit + 5 sandbox (local NEAR node) + 11 format tests, wasm build, 10 SDK + 5 agent + 58 app tests, `next build`, then `all checks passed`.
+→ 38 contract unit + 5 sandbox (local NEAR node) + 11 format tests, wasm build, 10 SDK + 5 agent + 62 app tests, `next build`, then `all checks passed`.
 
 **3. Run the app locally.**
 

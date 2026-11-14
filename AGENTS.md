@@ -24,7 +24,7 @@ every README claim maps to a test or live evidence in `VERIFY.md`.
 | Contract wasm | `cd contracts/tally && cargo near build non-reproducible-wasm` | `target/near/tally/tally.wasm` |
 | SDK tests | `pnpm --filter @tally-near/sdk test` | 10 pass |
 | Agent tests | `pnpm --filter @tally-near/agent test` | 5 pass |
-| App tests | `pnpm --filter @tally-near/web test` | 58 pass, 5 live tests skipped |
+| App tests | `pnpm --filter @tally-near/web test` | 62 pass, 6 live tests skipped |
 | App build | `pnpm --filter @tally-near/web build` | Next.js route table |
 | Live read-only | `near contract call-function as-read-only tallynear.testnet stats json-args '{}' network-config testnet now` | merchants, capsules, receipts counts |
 

@@ -6,7 +6,7 @@ implicit account, the agent's pay-only function-call key, and a café's menu sig
 ```bash
 cp .env.example .env.local   # fill in the sponsor and demo-counter secrets
 pnpm dev                     # http://localhost:3000
-pnpm test                    # 58 unit tests
+pnpm test                    # 62 unit tests
 LIVE=1 pnpm test             # + live testnet end to end (needs .env.local)
 ```
 
