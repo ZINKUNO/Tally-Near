@@ -78,7 +78,7 @@ impl Tally {
             item_count: a.item_count,
         });
         let key = ed25519_bytes(&m.signing_key).ok_or((Reject::BadSignature, "merchant key is not ed25519".into()))?;
-        if !env::ed25519_verify(&sig, &header, &key) {
+        if !env::ed25519_verify(&sig, header, &key) {
             return Err((Reject::BadSignature, "menu signature does not match the merchant's registered key".into()));
         }
 
@@ -129,11 +129,25 @@ impl Tally {
         Ok(Checked { needs_owner, guard, nullifier: nul, new_spent, cycle_reset })
     }
 
+    /// Drops this owner's expired Second Looks (rare path: only when the cap is reached).
+    /// Returns true when that freed room under the cap.
+    fn prune_expired_pending(&mut self, owner: &AccountId, now: u64) -> bool {
+        let expired: Vec<u64> = self.pending.values().filter(|p| &p.owner == owner && now > p.expires_at_ms).map(|p| p.id).collect();
+        for id in &expired {
+            self.pending.remove(id);
+            bump(OPEN_PENDING, owner, false);
+        }
+        counter(OPEN_PENDING, owner) < MAX_OPEN_PENDING
+    }
+
     fn record_strike(&mut self, owner: &AccountId, a: &PayArgs, code: Reject, reason: &str) -> bool {
         let now = now_ms();
         let c = self.capsules.get_mut(owner).expect("capsule");
         c.strikes.retain(|t| now.saturating_sub(*t) < STRIKE_WINDOW_MS);
         c.strikes.push(now);
+        if c.strikes.len() > MAX_STRIKES {
+            c.strikes.remove(0);
+        }
         c.attempts.push(Attempt { at_ms: now, merchant_id: a.merchant_id.clone(), price: a.price, code, reason: reason.into() });
         if c.attempts.len() > MAX_ATTEMPT_LOG {
             c.attempts.remove(0);
@@ -185,6 +199,7 @@ impl Tally {
         ids.push(id);
         self.receipts_by_owner.insert(owner.clone(), ids);
         emit("paid", json!({ "receipt_id": id, "owner": owner, "merchant_id": a.merchant_id, "payout": m.payout, "item_id": a.item_id, "price": a.price, "cosigned": cosigned }));
+        bump(INFLIGHT, owner, true);
         // Detached promise: scheduled when dropped; the callback settles or refunds the receipt.
         let _ = token::ft_transfer(self.config.token.clone(), m.payout, a.price, "tally purchase")
             .then(Self::ext(env::current_account_id()).with_static_gas(token::GAS_CALLBACK).on_payout(id));
@@ -218,7 +233,13 @@ impl Tally {
                 PayOutcome::Rejected { code, reason, frozen }
             }
             Err((code, reason)) => env::panic_str(&format!("{code:?}: {reason}")),
+            Ok(ref k) if by_agent && !k.needs_owner.is_empty() && counter(OPEN_PENDING, &owner) >= MAX_OPEN_PENDING && !self.prune_expired_pending(&owner, now) => {
+                let reason = format!("{MAX_OPEN_PENDING} purchases are already waiting for the owner");
+                let frozen = self.record_strike(&owner, &args, Reject::TooManyPending, &reason);
+                PayOutcome::Rejected { code: Reject::TooManyPending, reason, frozen }
+            }
             Ok(k) if by_agent && !k.needs_owner.is_empty() => {
+                bump(OPEN_PENDING, &owner, true);
                 let id = self.next_pending;
                 self.next_pending += 1;
                 let reasons = k.needs_owner.clone();
@@ -245,6 +266,7 @@ impl Tally {
         let c = self.owner_capsule_mut().clone();
         let p = self.pending.remove(&pending_id).unwrap_or_else(|| env::panic_str("no such pending purchase"));
         require!(p.owner == owner, "not your pending purchase");
+        bump(OPEN_PENDING, &owner, false);
         let now = now_ms();
         require!(now <= p.expires_at_ms, "Second Look expired");
         match self.check(&owner, &c, &p.args, p.proposed_at_ms, now) {
@@ -262,6 +284,7 @@ impl Tally {
         let _ = self.owner_capsule_mut();
         let p = self.pending.remove(&pending_id).unwrap_or_else(|| env::panic_str("no such pending purchase"));
         require!(p.owner == owner, "not your pending purchase");
+        bump(OPEN_PENDING, &owner, false);
         emit("declined", json!({ "pending_id": pending_id, "owner": owner }));
     }
 }

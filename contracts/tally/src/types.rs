@@ -208,6 +208,8 @@ pub enum Reject {
     InsufficientBalance,
     Duplicate,
     BadArgs,
+    /// Appended after launch (borsh enum order is preserved).
+    TooManyPending,
 }
 
 /// What `pay` did. Agent payments never panic on a rule violation: the attempt is recorded so
