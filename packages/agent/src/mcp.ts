@@ -8,11 +8,12 @@
  *   tally_menu            fetch + verify a merchant's signed menu, firewalled (category/price/floor only)
  *   tally_check_merchant  counterparty check: on-chain Guard + account signals -> sign / ask_human / refuse
  *   tally_buy             run one purchase end to end; the contract answers paid / second_look / rejected
+ *   tally_quote_topup     live NEAR Intents price for funding the allowance from another chain (dry quote)
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { checkCounterparty, explorerTx, fromUnits, verifyMenu } from '@tally-near/sdk';
+import { ORIGINS, checkCounterparty, dryQuote, explorerTx, fromUnits, verifyMenu, type OriginId } from '@tally-near/sdk';
 import { buy, loadMenu } from './agent.ts';
 import { agentConfig } from './config.ts';
 import { firewall } from './firewall.ts';
@@ -88,6 +89,18 @@ server.registerTool(
       forceIndex: item_index, forceReason: item_index === undefined ? undefined : 'chosen by the calling model',
     });
     return text({ status: r.status, item: r.item && { ...r.item, price: fromUnits(r.item.price) }, tx: r.txHash && explorerTx(r.txHash), steps: r.steps });
+  },
+);
+
+server.registerTool(
+  'tally_quote_topup',
+  {
+    description: 'Live NEAR Intents (1Click) price for sending stablecoins from another chain into NEAR USDC, to plan a top-up. Dry quote only: nothing is deposited or swapped.',
+    inputSchema: { from: z.enum(ORIGINS.map((o) => o.id) as [OriginId, ...OriginId[]]), usd: z.number().positive().max(1000) },
+  },
+  async ({ from, usd }) => {
+    const q = await dryQuote(from, usd, { jwt: process.env.ONECLICK_JWT });
+    return text(q ? { from, usd, arrives_usdc: (Number(q.amountOut) / 1e6).toFixed(2), seconds: q.timeEstimate, fee_usd: q.fee.toFixed(4), dry: true } : 'no live route right now');
   },
 );
 

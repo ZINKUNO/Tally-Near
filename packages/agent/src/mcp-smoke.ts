@@ -16,4 +16,6 @@ console.log((status.content as any)[0].text.slice(0, 400));
 const menuUrl = `${process.env.TALLY_MENU_BASE ?? 'http://localhost:8787'}/menu/cafe`;
 const menu = await c.callTool({ name: 'tally_menu', arguments: { menu_url: menuUrl } });
 console.log((menu.content as any)[0].text.slice(0, 500));
+const q = await c.callTool({ name: 'tally_quote_topup', arguments: { from: 'base', usd: 20 } });
+console.log((q.content as any)[0].text);
 await c.close();
