@@ -90,7 +90,7 @@ Keys stay in `~/.near-credentials` and `~/.tally/<prefix>/`, never in the repo.
 { "mcpServers": { "tally": { "command": "pnpm", "args": ["--dir", "Tally-Near/packages/agent", "mcp"],
   "env": { "TALLY_OWNER": "<owner>.testnet", "TALLY_AGENT_KEY": "ed25519:<the function-call key>" } } } }
 ```
-Tools: `tally_status`, `tally_menu`, `tally_check_merchant`, `tally_buy`. The server can't approve a
+Tools: `tally_status`, `tally_menu`, `tally_check_merchant`, `tally_buy`, `tally_quote_topup`. The server can't approve a
 Second Look or change rules, because its key can't.
 
 ## What stops a prompt-injected agent
@@ -121,6 +121,7 @@ Balance before and after: 89.6 → 89.6 tUSDC.
 | Promises + callbacks | `on_payout`, `on_withdraw` | a bounced payout refunds the capsule, restores the cap, frees the nullifier |
 | **Implicit accounts** | the app (`web/lib/passkey.ts`) | Face ID passkey → owner account with no wallet or seed phrase; a sponsor creates it with one transfer |
 | **NEAR AI Cloud** | planner + attestation (`packages/agent`) | private inference in a TEE; each receipt pins a gateway TDX quote digest bound to a fresh nonce |
+| **NEAR Intents** (1Click, dry quotes) | family top-up page, MCP `tally_quote_topup` | family abroad see the live price to fund the allowance from Base, Arbitrum, Ethereum or Polygon USDC; quote only, since Intents is mainnet-only |
 | **NEP-297 events** | every state change | indexers and the app read `paid`, `second_look`, `tripwire`, `blocked`… |
 | Named accounts | merchants, payouts, arbiter | the arbiter can be a Sputnik DAO; the Guard reads account-level facts |
 
@@ -156,6 +157,7 @@ Testnet deployment: Tally `tallynear.testnet`, token `tallynear-usdc.testnet`, m
 * Testnet only; tUSDC is a faucet token.
 * The attestation field pins NEAR AI Cloud evidence to each purchase; it does not run full DCAP verification.
 * Without `NEAR_AI_API_KEY` the planner is a deterministic cheapest-match rule (the contract enforces the same thing either way).
+* Cross-chain top-ups are shown as live NEAR Intents quotes (`dry: true`); the demo allowance holds testnet tUSDC, so no cross-chain transfer is executed.
 * `get_receipts`/`get_sales` read contract storage directly; at scale an indexer would serve history.
 * The demo deployment shortens the Guard's "new merchant" window to 2 minutes so it can be tried today; the default is 24 hours.
 

@@ -23,4 +23,5 @@ LIVE=1 pnpm test             # + live testnet end to end (needs .env.local)
 | `/send/<account>` | Family top-up link |
 | `/api/onboard` | Sponsor funds a new implicit account (NEAR + test USD) |
 | `/api/counter` | Freshly signed demo menu |
+| `/api/quote` | Dry NEAR Intents quote for a cross-chain top-up |
 | `/api/agent` | NEAR AI Cloud pick behind the context firewall, rule fallback |

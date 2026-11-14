@@ -23,7 +23,7 @@ pnpm mcp:smoke      # lists tools and calls the read-only ones
 | `NEAR_AI_MODEL` | default `zai-org/GLM-5.1-FP8` |
 | `TALLY_MIN_ACCOUNT_AGE_MS` | payout accounts younger than this draw a warning (default 24 h) |
 
-MCP tools: `tally_status`, `tally_menu`, `tally_check_merchant`, `tally_buy`. None of them can approve
+MCP tools: `tally_status`, `tally_menu`, `tally_check_merchant`, `tally_buy`, `tally_quote_topup` (live NEAR Intents price, dry). None of them can approve
 a Second Look, change rules or unfreeze: the key they hold can't.
 
 Tests: `pnpm test` (5).
