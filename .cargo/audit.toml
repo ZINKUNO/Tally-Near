@@ -1,0 +1,9 @@
+# cargo-audit configuration. Each ignored advisory is explained in SECURITY.md (TAL-09):
+# all are reached only through near-sdk's host-side test runner or an unused feature, and none
+# is present in the contract wasm (`cargo tree --target wasm32-unknown-unknown -e normal`).
+[advisories]
+ignore = [
+  "RUSTSEC-2026-0387", # crypto-bigint timing (near-vm-runner, unit-testing only)
+  "RUSTSEC-2024-0449", # unsafe-libyaml unmaintained (dev tooling)
+  "RUSTSEC-2022-0054", # wee_alloc unmaintained (near-sdk feature not enabled)
+]
