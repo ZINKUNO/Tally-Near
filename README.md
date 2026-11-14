@@ -223,7 +223,7 @@ Testnet deployment: Tally `tallynear.testnet`, token `tallynear-usdc.testnet`, m
 ## Security
 
 Internal security review (manual review, clippy, `cargo audit`, `pnpm audit`, 161 automated tests, a live
-adversarial run): **12 findings, 7 fixed and redeployed**, the rest accepted with reasons. Among them: closing
+adversarial run): **12 findings, 7 fixed** (contract and app redeployed), the rest accepted with reasons. Among them: closing
 a capsule while a payout was in flight (fixed), unbounded Second Looks as a storage drain (fixed), a critical
 Next.js advisory and a TEE-verifier library that skipped QE identity checks (both replaced).
 **Not independently audited; testnet only.** → [SECURITY.md](SECURITY.md), [threat model](docs/threat-model.md).

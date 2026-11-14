@@ -4,6 +4,11 @@ updates:
     directory: /
     schedule: { interval: weekly }
     open-pull-requests-limit: 5
+    # Major bumps change the contract wasm, so the deployed code hash would no longer match a
+    # reproducible build; take them deliberately with a redeploy, not from a bot.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: npm
     directory: /
     schedule: { interval: weekly }
