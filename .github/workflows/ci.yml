@@ -4,17 +4,28 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   rust:
+    name: Contract tests and clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
       - name: Contract and format tests
         # sandbox tests (tests/sandbox.rs) need cargo-near and a local NEAR node: run them with SANDBOX=1 ./scripts/verify.sh
         run: cargo test --workspace --lib
+      - name: Clippy (wasm32, warnings are errors)
+        run: cargo clippy -p tally -p tally-menu -p tusdc --target wasm32-unknown-unknown -- -D warnings
 
   typescript:
+    name: SDK, agent and app
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,3 +39,18 @@ jobs:
       - run: pnpm --filter @tally-near/agent test
       - run: pnpm --filter @tally-near/web test
       - run: pnpm --filter @tally-near/web build
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: pnpm audit (high and critical fail the build)
+        run: pnpm audit --prod --audit-level high
