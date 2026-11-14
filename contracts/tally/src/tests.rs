@@ -598,3 +598,30 @@ fn bond_cannot_leave_while_disputed() {
     ctx("cafe.testnet", &pk(&key(31)), T0 + 3000 + 2 * 60 * 60 * 1000, NearToken::from_near(0));
     let _ = w.c.withdraw_bond(U128(1));
 }
+
+#[test]
+fn family_can_top_up_someone_elses_capsule() {
+    let mut w = world();
+    ctx("tusdc.testnet", &w.owner_pk, T0, NearToken::from_near(0));
+    let msg = r#"{"owner":"alice.testnet","note":"lunch money"}"#.to_string();
+    let near_sdk::PromiseOrValue::Value(back) = w.c.ft_on_transfer(acc("mum.testnet"), U128(5 * USDC), msg) else { panic!() };
+    assert_eq!(back.0, 0);
+    let cap = w.c.get_capsule(acc("alice.testnet")).unwrap();
+    assert_eq!(cap.balance.0, 105 * USDC);
+    let t = cap.topups.last().unwrap();
+    assert_eq!((t.from.as_str(), t.note.as_str()), ("mum.testnet", "lunch money"));
+    let near_sdk::PromiseOrValue::Value(back) = w.c.ft_on_transfer(acc("mum.testnet"), U128(1), r#"{"owner":"nobody.testnet"}"#.into()) else { panic!() };
+    assert_eq!(back.0, 1);
+    let near_sdk::PromiseOrValue::Value(back) = w.c.ft_on_transfer(acc("mum.testnet"), U128(1), "garbage".into()) else { panic!() };
+    assert_eq!(back.0, 1);
+}
+
+#[test]
+fn sales_are_listed_per_merchant() {
+    let mut w = world();
+    let m = cafe_menu(T0);
+    agent(&w, T0 + 1000);
+    w.c.pay(m.args(&w.menu_sk, 0));
+    assert_eq!(w.c.get_sales(acc("cafe.testnet"), None).len(), 1);
+    assert!(w.c.get_sales(acc("other.testnet"), None).is_empty());
+}

@@ -60,6 +60,12 @@ impl Tally {
         ids.iter().rev().take(limit.unwrap_or(50) as usize).filter_map(|i| self.receipts.get(*i as u32)).collect()
     }
 
+    /// A merchant's sales, newest first (scans recent receipts; fine for a demo-sized ledger).
+    pub fn get_sales(&self, merchant_id: AccountId, limit: Option<u32>) -> Vec<&Receipt> {
+        let n = self.receipts.len();
+        (0..n).rev().filter_map(|i| self.receipts.get(i)).filter(|r| r.merchant_id == merchant_id).take(limit.unwrap_or(30) as usize).collect()
+    }
+
     pub fn get_pending(&self, owner: AccountId) -> Vec<&Pending> {
         self.pending.values().filter(|p| p.owner == owner).collect()
     }
