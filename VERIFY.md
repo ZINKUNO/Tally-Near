@@ -35,10 +35,10 @@ built wasm and the token on a local NEAR node.
 | 25 | TypeScript and Rust produce identical bytes | `packages/sdk/test/menu.test.ts`, `web/test/menu.test.ts` vs `fixtures/vectors.json` | — |
 | 26 | The model never sees merchant text | `packages/agent/test/agent.test.ts`, `web/test/firewall.test.ts` | attack-log step 1 shows the injected note |
 | 27 | Model output outside the menu falls back to rules | `model planner: valid answer is used, out-of-range answer falls back to rules` | — |
-| 28 | Receipts carry a NEAR AI Cloud attestation digest bound to a fresh nonce | `attestation requires the nonce to be echoed` | `get_receipt` → `attestation: "nearai-gw:…"` |
+| 28 | Receipts carry a NEAR AI Cloud attestation digest bound to a fresh nonce | `attestation requires the nonce to be echoed`, `web/test/attestation.test.ts` | `get_receipt` → `attestation: "nearai-gw:…"` |
 | 29 | One passkey derives the owner implicit account, agent and menu keys | `web/test/passkey.test.ts` | e2e "a new Face ID user…" |
-| 31 | Family top-up shows a live NEAR Intents quote from other chains | `web/test/intents.test.ts` | `curl '<app>/api/quote?from=base&usd=20'` |
 | 30 | The MCP server exposes status, menu, merchant check, buy and top-up quotes | `pnpm --filter @tally-near/agent mcp:smoke` (needs the merchant server) | — |
+| 31 | Family top-up shows a live NEAR Intents quote from other chains | `web/test/intents.test.ts` | `curl '<app>/api/quote?from=base&usd=20'` |
 
 ## Live, read-only (no keys)
 
