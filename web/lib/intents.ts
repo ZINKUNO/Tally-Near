@@ -1,2 +1,5 @@
-/** NEAR Intents quotes live in the SDK so the app and the agent share one implementation. */
-export { NEAR_USDC, ONECLICK, ORIGINS, parseQuote, quoteRequest, type OriginId, type Quote } from "@tally-near/sdk";
+/** NEAR Intents quotes and deposits live in the SDK so the app and the agent share one implementation. */
+export {
+  NEAR_USDC, ONECLICK, ORIGINS, depositRequest, parseDeposit, parseQuote, parseStatus, quoteRequest,
+  type Deposit, type DepositStatus, type OriginId, type Quote,
+} from "@tally-near/sdk";
