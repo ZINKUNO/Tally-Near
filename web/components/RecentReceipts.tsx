@@ -24,6 +24,7 @@ export function ReceiptRow({ r }: { r: Receipt }) {
         <p className="truncate text-[12px] text-faint">
           {r.merchantName ?? "Tally counter"} · {ago(r.timestamp)}
           {r.cosigned && <span className="text-needs"> · approved by you</span>}
+          {r.attestation && <span title={r.attestation}> · TEE-attested agent</span>}
         </p>
       </div>
       <div className="text-right">
