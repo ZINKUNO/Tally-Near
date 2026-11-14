@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
-    "@phala/dcap-qvl-node": "^0.3.3",
+    "@phala/dcap-qvl": "0.7.1",
     "@tally-near/sdk": "workspace:*",
     "near-api-js": "7.4.0",
     "zod": "^4.6.7"

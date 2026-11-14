@@ -4,7 +4,7 @@
  * Before planning, the agent asks the NEAR AI Cloud gateway for an Intel TDX quote bound to a fresh
  * 32-byte nonce, then (the same checks as github.com/nearai/nearai-cloud-verifier):
  *
- *   1. verifies the quote with Intel's DCAP collateral (`@phala/dcap-qvl-node`): status must be
+ *   1. verifies the quote with Intel's DCAP collateral (`@phala/dcap-qvl`, incl. QE identity): status must be
  *      `UpToDate` or `OutOfDate` (valid quote crypto, TCB advisory only)
  *   2. reads `report_data` from the *verified* quote, not the HTTP echo:
  *        report_data[0..32]  == the gateway's signing address (padded)
@@ -29,7 +29,6 @@ export type Attestation = {
 
 type Report = { intel_quote?: string; request_nonce?: string; signing_address?: string; signing_algo?: string };
 
-const PCCS = 'https://api.trustedservices.intel.com/tdx/certification/v4';
 const OK = new Set(['UpToDate', 'OutOfDate']);
 
 /** report_data checks against a verified quote's report_data (hex). */
@@ -43,14 +42,31 @@ export function checkBindings(reportDataHex: string, signingAddress: string, non
   };
 }
 
-/** DCAP-verify a TDX quote. Returns status and report_data, or null if the verifier isn't available. */
+/** Finds the 64-byte `reportData` inside a verified report (TD10 / TD15 / SGX shapes differ). */
+function findReportData(o: unknown, depth = 0): Uint8Array | null {
+  if (!o || typeof o !== 'object' || depth > 4) return null;
+  const r = o as Record<string, unknown>;
+  if (r.reportData instanceof Uint8Array) return r.reportData;
+  for (const v of Object.values(r)) {
+    const f = findReportData(v, depth + 1);
+    if (f) return f;
+  }
+  return null;
+}
+
+/**
+ * DCAP-verify a TDX quote with `@phala/dcap-qvl` (pure JS: PCK chain, TCB info and QE identity checks)
+ * against collateral from Intel's PCS. Returns status and report_data, or null if verification failed.
+ */
 export async function verifyQuote(quoteHex: string): Promise<{ status: string; reportData: string } | null> {
   try {
-    const { js_get_collateral, js_verify } = await import('@phala/dcap-qvl-node');
-    const raw = Buffer.from(quoteHex, 'hex');
-    const collateral = await js_get_collateral(PCCS, raw);
-    const r = js_verify(raw, collateral, BigInt(Math.floor(Date.now() / 1000))) as { status?: string; report?: { TD10?: { report_data?: string } } };
-    return { status: r?.status ?? 'unknown', reportData: r?.report?.TD10?.report_data ?? '' };
+    const { getCollateralAndVerify, INTEL_PCS_URL } = (await import('@phala/dcap-qvl')) as unknown as {
+      getCollateralAndVerify(q: Uint8Array, pccs?: string): Promise<{ status: string; report: unknown }>;
+      INTEL_PCS_URL: string;
+    };
+    const v = await getCollateralAndVerify(Buffer.from(quoteHex, 'hex'), INTEL_PCS_URL);
+    const rd = findReportData(v.report);
+    return { status: v.status, reportData: rd ? Buffer.from(rd).toString('hex') : '' };
   } catch {
     return null;
   }
