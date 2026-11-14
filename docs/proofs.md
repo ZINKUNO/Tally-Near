@@ -54,6 +54,9 @@ binds our nonce  true
 VERIFIED         true   receipt label: nearai-tdx:UpToDate:6375bb4aeeb793bd:0eb8857ff72f3f16
 ```
 
+On-chain: receipt #24 ([AErn655d…](https://testnet.nearblocks.io/txns/AErn655dXAbarCWjziM42EmAAEdrvT6Fovdt7PHE9XKu), paid gaslessly) carries
+`"attestation": "nearai-tdx:UpToDate:a83e6dbd72fea983:5064da35e9053215"`.
+
 Also: MCP tool `tally_verify_tee`; tests `a verified quote must bind the signing address and our nonce`.
 Scope: the app on Cloudflare records the nonce-bound quote digest (`nearai-gw:`); the full DCAP check runs in the agent
 (Node), because the verifier's WebAssembly build loads from disk.
