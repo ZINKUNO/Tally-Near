@@ -9,7 +9,7 @@ An AI agent may pay only for an item a merchant signed, at the signed price, to 
 merchant, inside your rules. A NEAR contract checks every payment; the agent's key can't do anything else.
 
 **[Live app](https://tally-near.adoranto737.workers.dev)** · [Demo café QR](https://tally-near.adoranto737.workers.dev/counter) · [Contract `tallynear.testnet`](https://testnet.nearblocks.io/address/tallynear.testnet) ·
-[Proofs](docs/proofs.md) · [Attack log](docs/attack-log.md) · [Happy-path log](docs/demo-log.md) · [Architecture](docs/architecture.md) · [Threat model](docs/threat-model.md) · [Verify every claim](VERIFY.md)
+[Proofs](docs/proofs.md) · [Attack log](docs/attack-log.md) · [Happy-path log](docs/demo-log.md) · [Architecture](ARCHITECTURE.md) · [Threat model](docs/threat-model.md) · [Verify every claim](VERIFY.md)
 
 Built at **NEAR HACKATHON** (Nov 2026) · Tracks: `security`, `agents`, `realworld` · MIT
 
@@ -149,7 +149,7 @@ method (including `approve`, `update_rules`, `unfreeze`), or call any other cont
 token). The contract also refuses owner methods signed by the agent key, in case it were ever issued
 wider. Limits to know: the allowance is spent on gas, rejected attempts included, and a key that runs
 out stops working until the owner adds a new one. Owners always keep a full-access key (in the app it
-comes from the passkey), so they can't lock themselves out. Details: [`docs/architecture.md`](docs/architecture.md).
+comes from the passkey), so they can't lock themselves out. Details: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Repository
 

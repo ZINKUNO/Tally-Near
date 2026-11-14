@@ -15,6 +15,66 @@ able to spend it on anything else. Three parties, one contract:
                               tallynear-usdc.testnet (NEP-141, 6 decimals)
 ```
 
+## System diagram
+
+```mermaid
+flowchart LR
+  subgraph Phone["Owner's phone (Tally app, Next.js on Cloudflare Workers)"]
+    PK[Passkey PRF] --> K1[owner key: implicit account]
+    PK --> K2[agent key: function-call, pay only]
+    PK --> K3[menu key, if running a counter]
+  end
+  subgraph Worker["Cloudflare Worker /api"]
+    ON[/onboard: sponsor funds account/]
+    RL[/relay: NEP-366 gas sponsor/]
+    AG[/agent: NEAR AI Cloud pick + attestation/]
+    CT[/counter: signed demo menu/]
+    IN[/intents, quote: 1Click/]
+  end
+  subgraph NEAR["NEAR testnet"]
+    T[(tallynear.testnet\nTally contract)]
+    U[(tallynear-usdc.testnet\nNEP-141)]
+    D[(tally-arbiter.sputnikv2.testnet\nSputnik DAO)]
+    M[(v1.signer-prod.testnet\nChain Signatures MPC)]
+  end
+  Counter[Café counter QR] -->|signed menu| Phone
+  K2 -->|delegate action| RL -->|meta tx| T
+  K1 -->|approve, freeze, rules| T
+  T -->|ft_transfer| U
+  D -->|resolve_dispute| T
+  T -->|sign receipt| M
+  AG --> NAI[NEAR AI Cloud TEE]
+  IN --> OC[NEAR Intents 1Click]
+```
+
+## Transaction lifecycle (one purchase)
+
+```mermaid
+sequenceDiagram
+  participant C as Café counter
+  participant A as Agent (phone / CLI / MCP)
+  participant R as Relayer (/api/relay)
+  participant T as Tally contract
+  participant F as tUSDC (NEP-141)
+  participant O as Owner (Face ID / wallet)
+  C->>A: QR: 144-byte header + Ed25519 signature + items
+  A->>A: verify menu vs registered key, counterparty check, firewall, plan
+  A->>T: preview_pay (view, free)
+  A->>R: pay as signed delegate action
+  R->>T: meta transaction (relayer pays gas)
+  T->>T: signature, freshness, Merkle leaf, rules, nullifier, Guard
+  alt cheapest match, no warnings
+    T->>F: ft_transfer to registered payout
+    F-->>T: on_payout: settled (or refunded if it bounced)
+  else pricier / extended / Guard warning
+    T-->>A: second_look (pending id)
+    O->>T: approve (owner key, never relayable)
+    T->>F: ft_transfer
+  else rule violation
+    T-->>A: rejected + strike (3 in an hour freeze the capsule)
+  end
+```
+
 ## Components
 
 | Path | What it is |

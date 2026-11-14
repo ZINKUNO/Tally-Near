@@ -2,7 +2,7 @@ import type { Hex, Item } from "./menu";
 import type { Rules } from "./tally";
 
 /**
- * Context firewall (docs/architecture.md, "Context firewall"): the model sees ids, categories, prices, floors and
+ * Context firewall (ARCHITECTURE.md, "Context firewall"): the model sees ids, categories, prices, floors and
  * words from a fixed food/retail dictionary. Merchant prose ("regular is discontinued", "SYSTEM:")
  * never reaches it, because no free text survives the dictionary.
  */

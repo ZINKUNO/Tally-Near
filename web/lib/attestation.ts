@@ -1,7 +1,7 @@
 /**
  * Server side: NEAR AI Cloud gateway attestation bound to a fresh nonce. The agent route returns its
  * digest with each pick, and the app writes it into the purchase receipt on-chain. A binding and a
- * nonce check, not a DCAP verification (see docs/architecture.md).
+ * nonce check, not a DCAP verification (see ARCHITECTURE.md).
  */
 import { createHash, randomBytes } from "node:crypto";
 
