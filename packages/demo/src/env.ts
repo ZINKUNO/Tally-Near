@@ -3,7 +3,7 @@
  * keychain (~/.near-credentials), and demo-only keys (merchant menu keys, the agent's
  * function-call key) in ~/.tally/<prefix>/keys.json. Nothing secret is ever written to the repo.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { Account, KeyPair, KeyPairSigner, type KeyPairString } from 'near-api-js';
@@ -23,12 +23,25 @@ export const ids = {
 
 export const client = new TallyClient(ids.contract, process.env.NEAR_RPC ?? RPC.testnet);
 
-/** Full-access account from the NEAR CLI keychain. */
+/** Full-access account from the NEAR CLI keychain. Picks the stored key that is live on chain. */
 export function fullAccess(accountId: string): Account {
-  const file = join(homedir(), '.near-credentials', NETWORK, `${accountId}.json`);
-  if (!existsSync(file)) throw new Error(`no key for ${accountId} in ~/.near-credentials (run scripts/deploy.sh)`);
-  const { private_key } = JSON.parse(readFileSync(file, 'utf8'));
-  return new Account(accountId, client.provider, KeyPairSigner.fromSecretKey(private_key as KeyPairString));
+  const dir = join(homedir(), '.near-credentials', NETWORK);
+  const files = [join(dir, `${accountId}.json`)];
+  if (existsSync(join(dir, accountId))) files.push(...readdirSync(join(dir, accountId)).map((f) => join(dir, accountId, f)));
+  const stored = files.filter(existsSync).map((f) => JSON.parse(readFileSync(f, 'utf8')) as { public_key: string; private_key: string });
+  if (!stored.length) throw new Error(`no key for ${accountId} in ~/.near-credentials (run scripts/deploy.sh)`);
+  const live = liveKeys.get(accountId);
+  const pick = (live && stored.find((k) => live.includes(k.public_key))) ?? stored[0];
+  return new Account(accountId, client.provider, KeyPairSigner.fromSecretKey(pick.private_key as KeyPairString));
+}
+
+const liveKeys = new Map<string, string[]>();
+/** Load on-chain access keys for these accounts so `fullAccess` can pick the right stored key. */
+export async function loadLiveKeys(accountIds: string[]) {
+  for (const accountId of accountIds) {
+    const r = (await client.provider.viewAccessKeyList({ accountId } as any).catch(() => ({ keys: [] }))) as any;
+    liveKeys.set(accountId, r.keys.map((k: any) => k.public_key));
+  }
 }
 
 type DemoKeys = { agent: KeyPairString; cafeMenu: KeyPairString; shadyMenu: KeyPairString };
