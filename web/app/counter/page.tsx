@@ -36,7 +36,7 @@ export default function Counter() {
   return (
     <div className="flex flex-1 flex-col items-center text-center">
       <div className="flex items-center gap-2">
-        <Image src="/mark.svg" alt="" width={28} height={28} className="rounded-lg" />
+        <Image src="/icon-192.png" alt="Tally" width={28} height={28} className="rounded-lg" />
         <span className="font-semibold">Tally Demo Café</span>
       </div>
       <p className="mt-2 text-sm text-muted">Scan with Tally to pay. The menu re-signs every 20 seconds.</p>

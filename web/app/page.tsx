@@ -32,7 +32,7 @@ export default function Welcome() {
   return (
     <div className="flex flex-1 flex-col">
       <div className="flex items-center gap-3">
-        <Image src="/mark.svg" alt="" width={40} height={40} className="rounded-xl" />
+        <Image src="/icon-192.png" alt="Tally" width={40} height={40} className="rounded-xl" />
         <div className="leading-tight">
           <p className="font-medium">Tally</p>
           <p className="text-[12px] text-faint">NEAR testnet</p>

@@ -62,7 +62,7 @@ function HomeInner() {
 
   const header = (
     <div className="flex items-center gap-3">
-      <Image src="/mark.svg" alt="" width={40} height={40} className="rounded-xl" />
+      <Image src="/icon-192.png" alt="Tally" width={40} height={40} className="rounded-xl" />
       <div className="min-w-0 flex-1 leading-tight">
         <p className="font-medium">Tally</p>
         <p className="truncate text-[12px] text-faint">{name ? `${name}'s allowance` : "Your allowance"}</p>
