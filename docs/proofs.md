@@ -111,3 +111,30 @@ agent's pay-only key, which pays gaslessly through the relayer. Wallet accounts 
 | Named accounts get test USD only, no NEAR | `web/test/passkey.test.ts` |
 
 ![Wallet picker](images/wallet-picker.png)
+
+## 6. NEAR Chain Signatures: portable receipts
+
+`sign_receipt(receipt_id)` makes the Tally contract ask NEAR's MPC network (`v1.signer-prod.testnet`) to sign a
+settled receipt with a secp256k1 key derived for `tallynear.testnet` + path `tally-receipts`. The payload is the
+EIP-191 hash of a canonical receipt digest, so **any EVM chain can `ecrecover` it** to confirm Tally on NEAR settled
+that purchase (a merchant's books on another chain, a loyalty contract, an auditor). Verification needs nothing
+from Tally: recompute the digest, derive the key from the MPC root key, recover.
+
+| Check | Evidence |
+| --- | --- |
+| Contract calls the MPC signer, stores the signature | [HWYZCtVp…](https://testnet.nearblocks.io/txns/HWYZCtVpZ2MXxMDCLcb5b3MWCVpGFKKbMUwAn23LMH1m) (receipt #24) |
+| Tally's derived EVM address | `0x2d3c430a7e50da6f2102091828424aeba9148b8b` |
+| Independent check (digest, EIP-191 payload, ecrecover) | all `true`, below |
+| Offline test on the live signature | `packages/sdk/test/portable.test.ts` + `fixtures/portable-receipt.json` |
+| Contract tests | `receipt_digest_binds_every_field_and_the_mpc_answer_is_stored`, `unsettled_receipts_are_not_signed` |
+
+```text
+$ pnpm --filter @tally-near/demo portable 24
+receipt   #24: 4.5 tUSDC from tallynear-alice.testnet to tallynear-cafe.testnet
+digest    af176d8211c86d889d941a1036d1716a791f166d2193a1aac7d047c93d257037  recomputed matches: true
+payload   cf20db6d592b2f3b9ab0c6d444c1b0e3cf0cb887d977142658825ad62e773b25  EIP-191 hash matches: true
+signer    MPC v1.signer-prod.testnet, path "tally-receipts"
+tally     Tally's derived EVM address 0x2d3c430a7e50da6f2102091828424aeba9148b8b
+ecrecover 0x2d3c430a7e50da6f2102091828424aeba9148b8b  matches: true
+solidity  ecrecover(0xcf20db6d…3b25, 27, 0x404f2d2e…53e1, 0x77ae8745…2135) == 0x2d3c430a7e50da6f2102091828424aeba9148b8b
+```
