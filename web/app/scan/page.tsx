@@ -398,7 +398,7 @@ function ScanInner() {
                 </Tile>
                 <div>
                   <p className="text-[15px]">To {st.merchant.name}</p>
-                  <p className="text-[12px] text-faint">{usd(st.merchant.bond)} bonded · payout from the registry</p>
+                  <p className="text-[12px] text-faint">{nearAmount(st.merchant.bond)} bonded · payout from the registry</p>
                 </div>
               </li>
               <li className="flex gap-3">
