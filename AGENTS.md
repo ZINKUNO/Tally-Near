@@ -20,7 +20,7 @@ every README claim maps to a test or live evidence in `VERIFY.md`.
 | Goal | Command | Expected |
 | --- | --- | --- |
 | Everything offline | `./scripts/verify.sh` | ends with `all checks passed` |
-| Contract + format tests | `cargo test --workspace` | 38 + 11 passed |
+| Contract + format tests | `cargo test --workspace` | 38 unit + 5 sandbox + 11 format passed (sandbox downloads a local NEAR node on first run) |
 | Contract wasm | `cd contracts/tally && cargo near build non-reproducible-wasm` | `target/near/tally/tally.wasm` |
 | SDK tests | `pnpm --filter @tally-near/sdk test` | 10 pass |
 | Agent tests | `pnpm --filter @tally-near/agent test` | 5 pass |
