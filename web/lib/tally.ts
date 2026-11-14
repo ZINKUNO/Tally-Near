@@ -1,6 +1,7 @@
 import { Account, KeyPairSigner, type KeyPairString } from "near-api-js";
 import type { Capsule as RawCapsule, Merchant as RawMerchant } from "@tally-near/sdk";
 import { TALLY, TGAS, TOKEN, YOCTO, client, provider } from "./chain";
+import type { WalletLike } from "./wallet";
 
 export const CATEGORIES = {
   food: 0,
@@ -189,19 +190,48 @@ export async function chainNow(): Promise<bigint> {
 
 // ---------- chain writes ----------
 
-export type Signer = { accountId?: string; address: string; secret: KeyPairString };
+export type Signer = { accountId?: string; address: string; secret: KeyPairString; wallet?: WalletLike };
+
+type Outcome = { status: { SuccessValue?: string; Failure?: unknown }; transaction: { hash: string } };
+
+function parseOutcome(tx: Outcome) {
+  if (tx.status.Failure) throw Object.assign(new Error(JSON.stringify(tx.status.Failure)), { failure: tx.status.Failure });
+  const raw = tx.status.SuccessValue ? atob(tx.status.SuccessValue) : "";
+  return { hash: tx.transaction.hash, value: raw ? JSON.parse(raw) : undefined };
+}
 
 const accountOf = (who: Signer, accountId = who.accountId ?? who.address) => new Account(accountId, provider, KeyPairSigner.fromSecretKey(who.secret));
 
 /** Sends one function call, waits for the final outcome, throws on failure, returns the hash and return value. */
 export async function call(who: Signer, contractId: string, methodName: string, args: object, deposit = 0n, gas = 100n * TGAS, as?: string) {
-  const tx = (await accountOf(who, as).callFunctionRaw({ contractId, methodName, args, deposit, gas })) as unknown as {
-    status: { SuccessValue?: string; Failure?: unknown };
-    transaction: { hash: string };
-  };
-  if (tx.status.Failure) throw Object.assign(new Error(JSON.stringify(tx.status.Failure)), { failure: tx.status.Failure });
-  const raw = tx.status.SuccessValue ? atob(tx.status.SuccessValue) : "";
-  return { hash: tx.transaction.hash, value: raw ? JSON.parse(raw) : undefined };
+  if (who.wallet && !as) {
+    // a NEAR wallet holds the owner key: it shows the transaction and signs it
+    const tx = await who.wallet.signAndSendTransaction({
+      receiverId: contractId,
+      actions: [{ type: "FunctionCall", params: { methodName, args: args as Record<string, unknown>, gas: gas.toString(), deposit: deposit.toString() } }],
+    });
+    return parseOutcome(tx as Outcome);
+  }
+  return parseOutcome((await accountOf(who, as).callFunctionRaw({ contractId, methodName, args, deposit, gas })) as unknown as Outcome);
+}
+
+async function addPayKey(owner: Signer, publicKey: string, allowance: bigint) {
+  if (owner.wallet) {
+    await owner.wallet.signAndSendTransaction({
+      receiverId: owner.accountId ?? owner.address,
+      actions: [{ type: "AddKey", params: { publicKey, accessKey: { permission: { receiverId: TALLY, methodNames: ["pay"], allowance: allowance.toString() } } } }],
+    });
+  } else {
+    await accountOf(owner).addFunctionCallAccessKey({ publicKey, contractId: TALLY, methodNames: ["pay"], allowance });
+  }
+}
+
+async function deleteKey(owner: Signer, publicKey: string) {
+  if (owner.wallet) {
+    await owner.wallet.signAndSendTransaction({ receiverId: owner.accountId ?? owner.address, actions: [{ type: "DeleteKey", params: { publicKey } }] });
+  } else {
+    await accountOf(owner).deleteKey(publicKey);
+  }
 }
 
 /** Opens the capsule, gives the agent a key that can only call `pay`, and loads the first deposit. */
@@ -212,7 +242,7 @@ export async function createAllowance(owner: Signer, agentPublicKey: string, rul
   }
   const keys = (await provider.viewAccessKeyList({ accountId: id } as never)) as unknown as { keys: { public_key: string }[] };
   if (!keys.keys.some((k) => k.public_key === agentPublicKey)) {
-    await accountOf(owner).addFunctionCallAccessKey({ publicKey: agentPublicKey, contractId: TALLY, methodNames: ["pay"], allowance: YOCTO / 4n });
+    await addPayKey(owner, agentPublicKey, YOCTO / 4n);
   }
   if (deposit > 0n) await fundAllowance(owner, id, deposit, "");
   return id;
@@ -247,14 +277,12 @@ export async function registerMerchant(owner: Signer, name: string, signingKey: 
 export async function revokeAgent(owner: Signer, agentPublicKey: string) {
   await call(owner, TALLY, "set_agent_key", { agent_key: null });
   const keys = (await provider.viewAccessKeyList({ accountId: owner.accountId ?? owner.address } as never)) as unknown as { keys: { public_key: string }[] };
-  if (keys.keys.some((k) => k.public_key === agentPublicKey)) await accountOf(owner).deleteKey(agentPublicKey);
+  if (keys.keys.some((k) => k.public_key === agentPublicKey)) await deleteKey(owner, agentPublicKey);
 }
 
 /** Gives the (same, passkey-derived) agent key back its pay-only access. */
 export async function restoreAgent(owner: Signer, agentPublicKey: string) {
   await call(owner, TALLY, "set_agent_key", { agent_key: agentPublicKey });
   const keys = (await provider.viewAccessKeyList({ accountId: owner.accountId ?? owner.address } as never)) as unknown as { keys: { public_key: string }[] };
-  if (!keys.keys.some((k) => k.public_key === agentPublicKey)) {
-    await accountOf(owner).addFunctionCallAccessKey({ publicKey: agentPublicKey, contractId: TALLY, methodNames: ["pay"], allowance: YOCTO / 4n });
-  }
+  if (!keys.keys.some((k) => k.public_key === agentPublicKey)) await addPayKey(owner, agentPublicKey, YOCTO / 4n);
 }
