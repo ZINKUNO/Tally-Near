@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { rulePick, sanitizePayload, validatePick } from "@/lib/firewall";
+import { gatewayAttestation } from "@/lib/attestation";
 import { createLimiter } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
@@ -19,6 +20,8 @@ const perIp = createLimiter(60, 3_600_000);
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const payload = sanitizePayload(await req.json().catch(() => ({})));
+  // fetched in parallel; pinned to the receipt so the owner can see what evidence the agent ran under
+  const attested = gatewayAttestation();
   const useModel = !!process.env.NEAR_AI_API_KEY && perIp(ip);
   if (useModel) {
     try {
@@ -32,13 +35,15 @@ export async function POST(req: Request) {
         ],
       });
       const pick = validatePick(JSON.parse(jsonOf(r.choices[0]?.message?.content ?? "{}")), payload);
-      if (pick) return NextResponse.json({ ...pick, by: "near-ai" });
+      if (pick) return NextResponse.json({ ...pick, by: "near-ai", attestation: await attested });
     } catch (e) {
       console.error("NEAR AI Cloud failed, using rules", e);
     }
   }
   const pick = rulePick(payload);
-  return NextResponse.json(pick ? { ...pick, by: "rules" } : { item_id: null, reason: "Nothing on this menu matches.", by: "rules" });
+  return NextResponse.json(
+    pick ? { ...pick, by: "rules", attestation: await attested } : { item_id: null, reason: "Nothing on this menu matches.", by: "rules" },
+  );
 }
 
 /** Models sometimes wrap the JSON in prose or a code fence. */
