@@ -11,7 +11,8 @@
     "pay": "node --experimental-strip-types src/pay.ts",
     "attack": "node --experimental-strip-types src/attack.ts",
     "status": "node --experimental-strip-types src/status.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dao": "node --experimental-strip-types src/dao.ts"
   },
   "dependencies": {
     "@tally-near/agent": "workspace:*",
