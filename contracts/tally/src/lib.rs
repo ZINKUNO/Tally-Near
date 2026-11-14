@@ -45,6 +45,10 @@ pub const REPORTS_TO_WARN: usize = 2;
 /// Disputes can be opened this long after a purchase.
 pub const DISPUTE_WINDOW_MS: u64 = 7 * 24 * 60 * 60 * 1000;
 pub const MAX_ATTEMPT_LOG: usize = 20;
+/// Open Second Looks one owner may have at a time (storage is paid by the contract).
+pub const MAX_OPEN_PENDING: u32 = 5;
+/// Strikes kept per capsule even when the tripwire is off.
+pub const MAX_STRIKES: usize = 100;
 pub const MAX_TEXT: usize = 160;
 
 #[derive(BorshStorageKey)]
@@ -176,3 +180,30 @@ pub(crate) fn ed25519_bytes(pk: &PublicKey) -> Option<[u8; 32]> {
 pub(crate) fn short(s: Option<String>) -> Option<String> {
     s.map(|t| t.chars().take(MAX_TEXT).collect())
 }
+
+// ---- counters kept under their own storage prefixes (added after launch: no state migration) ----
+
+fn counter_map(prefix: &[u8]) -> near_sdk::store::LookupMap<AccountId, u32> {
+    near_sdk::store::LookupMap::new(prefix.to_vec())
+}
+
+pub(crate) fn counter(prefix: &[u8], who: &AccountId) -> u32 {
+    counter_map(prefix).get(who).copied().unwrap_or(0)
+}
+
+pub(crate) fn bump(prefix: &[u8], who: &AccountId, up: bool) {
+    let mut m = counter_map(prefix);
+    let n = m.get(who).copied().unwrap_or(0);
+    let next = if up { n + 1 } else { n.saturating_sub(1) };
+    if next == 0 {
+        m.remove(who);
+    } else {
+        m.insert(who.clone(), next);
+    }
+    m.flush();
+}
+
+/// Payouts and withdrawals in flight per owner; `close_capsule` waits for zero.
+pub(crate) const INFLIGHT: &[u8] = b"infl";
+/// Open Second Looks per owner.
+pub(crate) const OPEN_PENDING: &[u8] = b"pcnt";

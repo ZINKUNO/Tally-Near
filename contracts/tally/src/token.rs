@@ -63,6 +63,7 @@ impl Tally {
     #[private]
     pub fn on_payout(&mut self, receipt_id: u64, #[callback_result] result: Result<(), PromiseError>) -> bool {
         let Some(r) = self.receipts.get_mut(receipt_id as u32) else { return false };
+        bump(INFLIGHT, &r.owner.clone(), false);
         if result.is_ok() {
             r.status = ReceiptStatus::Settled;
             let (owner, merchant_id, price) = (r.owner.clone(), r.merchant_id.clone(), r.price);
@@ -88,6 +89,7 @@ impl Tally {
 
     #[private]
     pub fn on_withdraw(&mut self, owner: AccountId, amount: U128, #[callback_result] result: Result<(), PromiseError>) -> bool {
+        bump(INFLIGHT, &owner, false);
         if result.is_ok() {
             return true;
         }

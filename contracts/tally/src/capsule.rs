@@ -87,6 +87,7 @@ impl Tally {
         require!(amount.0 > 0 && amount.0 <= c.balance.0, "bad amount");
         c.balance = U128(c.balance.0 - amount.0);
         emit("withdrawn", json!({ "owner": owner, "amount": amount }));
+        bump(INFLIGHT, &owner, true);
         token::ft_transfer(token, owner.clone(), amount, "tally withdraw")
             .then(Self::ext(env::current_account_id()).with_static_gas(token::GAS_CALLBACK).on_withdraw(owner, amount))
     }
@@ -97,6 +98,8 @@ impl Tally {
         let c = self.owner_capsule_mut();
         require!(c.balance.0 == 0, "withdraw the balance first");
         let refund = c.storage_deposit.0;
+        // a bounced payout or withdrawal refunds into the capsule, so it must still exist
+        require!(counter(INFLIGHT, &owner) == 0, "a payout or withdrawal is still in flight");
         self.capsules.remove(&owner);
         emit("capsule_closed", json!({ "owner": owner }));
         Promise::new(owner).transfer(NearToken::from_yoctonear(refund))
